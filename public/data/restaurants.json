@@ -1,0 +1,72 @@
+[
+  {
+    "id": "1",
+    "name": "La Bella Italia",
+    "address": "123 Main St, Rome, Italy",
+    "cuisine": "Italian",
+    "defaultPreparationTime": 20,
+    "openingHours": "Mon-Sun 12:00-22:00",
+    "picture": "/images/restoita.jpg",
+    "dishes": [
+      {
+        "id": "d1",
+        "name": "Margherita Pizza",
+        "type": "main",
+        "tags": [
+          "vegetarian"
+        ],
+        "description": "Classic pizza with tomato, mozzarella, basil",
+        "price": 12,
+        "picture": "/images/pizza.jpg",
+        "status": "unpublished"
+      },
+      {
+        "id": "d2",
+        "name": "Tiramisu",
+        "type": "dessert",
+        "tags": [
+          "gluten"
+        ],
+        "description": "Coffee-flavored Italian dessert",
+        "price": 6,
+        "picture": "/images/tiramisu.jpg",
+        "status": "published"
+      }
+    ]
+  },
+  {
+    "id": "2",
+    "name": "Taste of Georgia",
+    "address": "Avenue de Tbilisi 21",
+    "cuisine": "Georgian",
+    "defaultPreparationTime": 15,
+    "openingHours": "Mon-Sun 15:00-23:00",
+    "picture": "/images/georgianrest.jpg",
+    "dishes": [
+      {
+        "id": "d1",
+        "name": "Churchella",
+        "type": "dessert",
+        "tags": [
+          "vegetarian"
+        ],
+        "description": "Classic Georgian dessert with nuts ",
+        "price": 16,
+        "picture": "/images/churchella.jpg",
+        "status": "published"
+      },
+      {
+        "id": "d2",
+        "name": "Chachapuri ",
+        "type": "main",
+        "tags": [
+          "gluten"
+        ],
+        "description": "The best Georgian dish you can find",
+        "price": 6,
+        "picture": "/images/chachapuri.jpg",
+        "status": "out-of-stock"
+      }
+    ]
+  }
+]
