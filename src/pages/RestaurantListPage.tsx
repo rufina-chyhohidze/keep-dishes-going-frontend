@@ -1,28 +1,53 @@
 import React from "react";
-import {Link} from "react-router-dom";
-import {useRestaurants} from "../hooks/useRestaurants";
+import {Box, Container, Typography} from "@mui/material";
+import {RestaurantList} from "../components/RestaurantList";
 
 const RestaurantListPage: React.FC = () => {
-    const {data: restaurants, isLoading, error} = useRestaurants();
-
-    if (isLoading) return <div className="container">Loading...</div>;
-    if (error) return <div className="container">Error loading restaurants</div>;
-
     return (
-        <div className="container">
-            <h1>Restaurants</h1>
-            <ul>
-                {restaurants?.map(r => (
-                    <li key={r.id} className="card">
-                        <Link to={`/restaurants/${r.id}`}>
-                            <h2>{r.name}</h2>
-                        </Link>
-                        <p>{r.cuisine}</p>
-                        <p>{r.dishes.length} dishes available</p>
-                    </li>
-                ))}
-            </ul>
-        </div>
+        <Box
+            sx={{
+                position: "relative",
+                minHeight: "100vh",
+                backgroundImage: 'url("../images/background.png")',
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                backgroundRepeat: "no-repeat",
+                "&::before": {
+                    content: '""',
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    height: "100%",
+                    backgroundColor: "rgba(0, 0, 0, 0.5)",
+                    zIndex: 1,
+                },
+            }}
+        >
+            <Container
+                maxWidth="lg"
+                sx={{
+                    position: "relative",
+                    zIndex: 2,
+                    py: 8,
+                    color: "#fff",
+                    textAlign: "center",
+                }}
+            >
+                <Typography
+                    variant="h3"
+                    sx={{
+                        fontWeight: 700,
+                        mb: 5,
+                        textShadow: "0 3px 6px rgba(0,0,0,0.6)",
+                    }}
+                >
+                    Discover Fine Restaurants 🍽️
+                </Typography>
+
+                <RestaurantList/>
+            </Container>
+        </Box>
     );
 };
 

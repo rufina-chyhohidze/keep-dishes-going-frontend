@@ -8,14 +8,3 @@ export interface Dish {
     picture?: string;
     status: "published" | "unpublished" | "out-of-stock";
 }
-
-export interface Restaurant {
-    id: string;
-    name: string;
-    address: string;
-    cuisine: string;
-    defaultPreparationTime: number;
-    openingHours: string;
-    picture?: string
-    dishes: Dish[];
-}

@@ -1,13 +1,11 @@
+// src/hooks/useRestaurants.ts
 import {useQuery} from "@tanstack/react-query";
-import axios from "axios";
-import type {Restaurant} from "../types/Dish";
+import type {Restaurant} from "../types/Restaurant";
+import {getAllRestaurants} from "../services/services";
 
-export const useRestaurants = () => {
-    return useQuery<Restaurant[], Error>({
+export const useRestaurants = () =>
+    useQuery<Restaurant[], Error>({
         queryKey: ["restaurants"],
-        queryFn: async () => {
-            const {data} = await axios.get("/data/restaurants.json");
-            return data;
-        },
+        queryFn: getAllRestaurants,
     });
-};
+
