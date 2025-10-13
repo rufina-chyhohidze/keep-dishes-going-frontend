@@ -21,7 +21,7 @@
     "json-server": "^0.17.3",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
-    "react-hook-form": "^7.64.0",
+    "react-hook-form": "^7.65.0",
     "react-router-dom": "^7.9.3",
     "zod": "^4.1.12"
   },
