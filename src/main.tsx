@@ -1,5 +1,4 @@
 import './index.css';
-import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -18,7 +17,6 @@ const theme = createTheme({
 });
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
-    <React.StrictMode>
         <QueryClientProvider client={queryClient}>
             <BrowserRouter>
                 <BasketProvider>
@@ -29,5 +27,4 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
                 </BasketProvider>
             </BrowserRouter>
         </QueryClientProvider>
-    </React.StrictMode>
 );
