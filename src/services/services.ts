@@ -1,4 +1,4 @@
-import api from "../api/api";
+import api from "../api.ts";
 import type {Restaurant} from "../types/Restaurant";
 
 export async function getAllRestaurants(): Promise<Restaurant[]> {

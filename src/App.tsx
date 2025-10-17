@@ -3,11 +3,13 @@ import { Route, Routes } from "react-router-dom";
 import RestaurantListPage from "./pages/RestaurantListPage";
 import RestaurantDetailsPage from "./pages/RestaurantDetailsPage";
 import RoleSelectionPage from "./pages/RoleSelectionPage";
-import OwnerLandingPage from "./pages/OwnerLandingPage";
+
 import BasketPage from "./pages/BasketPage";
 import CreateRestaurantPage from "./pages/CreateRestaurantPage";
 import { RouteGuard } from "./components/RouteGuard";
 import SecurityContextProvider from "./context/SecurityContextProvider";
+import OwnerDashboard from "./pages/OwnerDashboard.tsx";
+import OwnerDishesPage from "./pages/OwnerDishesPage.tsx";
 
 const App: React.FC = () => {
     return (
@@ -18,6 +20,8 @@ const App: React.FC = () => {
                 <Route path="/restaurants" element={<RestaurantListPage />} />
                 <Route path="/restaurants/:id" element={<RestaurantDetailsPage />} />
                 <Route path="/basket" element={<BasketPage />} />
+
+                {/* Owner routes */}
                 <Route
                     path="/owner/create-restaurant"
                     element={
@@ -30,7 +34,15 @@ const App: React.FC = () => {
                     path="/owner"
                     element={
                         <RouteGuard>
-                            <OwnerLandingPage />
+                            <OwnerDashboard />
+                        </RouteGuard>
+                    }
+                />
+                <Route
+                    path="/owner/dishes"
+                    element={
+                        <RouteGuard>
+                            <OwnerDishesPage />
                         </RouteGuard>
                     }
                 />
