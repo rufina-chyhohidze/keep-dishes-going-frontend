@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
     Container,
     Typography,
@@ -11,19 +11,27 @@ import {
     Chip,
     Button,
     Box,
+    Snackbar,
+    Alert,
 } from "@mui/material";
-import api from "../api";
-import { useSecurityContext } from "../context/SecurityContext";
 import { useNavigate } from "react-router-dom";
+import { useSecurityContext } from "../context/SecurityContext";
+import api from "../api";
+import { useDishesOwner } from "../hooks/useDishesOwner";
+import type { Dish } from "../model/Dish";
 
 export default function OwnerDishesPage() {
     const { isAuthenticated, getToken } = useSecurityContext();
     const [restaurantId, setRestaurantId] = useState<string | null>(null);
-    const [dishes, setDishes] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
-    const navigate = useNavigate();
+    const [snackbar, setSnackbar] = useState({
+        open: false,
+        message: "",
+        severity: "success" as "success" | "error",
+    });
 
-    //fetch restaurantId for logged-in owner
+    const navigate = useNavigate();
+    const token = getToken();
+
     useEffect(() => {
         if (!isAuthenticated()) {
             window.location.href = "/";
@@ -32,39 +40,19 @@ export default function OwnerDishesPage() {
 
         const fetchRestaurant = async () => {
             try {
-                const token = getToken();
                 const res = await api.get("/owner/me/restaurant", {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 setRestaurantId(res.data.restaurantId);
             } catch (err) {
-                console.error(" Failed to fetch restaurant", err);
+                console.error("Failed to fetch restaurant", err);
             }
         };
-
         fetchRestaurant();
-    }, [isAuthenticated, getToken]);
+    }, [isAuthenticated, token]);
 
-    //fetch dishes when restaurantId is loaded
-    useEffect(() => {
-        if (restaurantId) {
-            fetchDishes();
-        }
-    }, [restaurantId]);
-
-    const fetchDishes = async () => {
-        try {
-            const token = getToken();
-            const res = await api.get(`/restaurants/${restaurantId}/dishes/all`, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            setDishes(res.data);
-        } catch (err) {
-            console.error(" Failed to fetch dishes", err);
-        } finally {
-            setLoading(false);
-        }
-    };
+    const { dishes, isLoading, isError, error, publishDish, unpublishDish } =
+        useDishesOwner(restaurantId, token);
 
     const getChipColor = (state: string) => {
         switch (state) {
@@ -79,44 +67,48 @@ export default function OwnerDishesPage() {
         }
     };
 
-    // publish a dish
     const handlePublish = async (dishId: string) => {
         try {
-            const token = getToken();
-            await api.post(
-                `/restaurants/${restaurantId}/dishes/${dishId}/publish`,
-                {},
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
-            await fetchDishes();
-        } catch (err) {
-            console.error("Failed to publish dish", err);
-            alert(" Failed to publish dish");
+            await publishDish(dishId);
+            setSnackbar({
+                open: true,
+                message: "Dish published successfully",
+                severity: "success",
+            });
+        } catch {
+            setSnackbar({
+                open: true,
+                message: "Failed to publish dish",
+                severity: "error",
+            });
         }
     };
 
-    //unpublish a dish
     const handleUnpublish = async (dishId: string) => {
         try {
-            const token = getToken();
-            await api.post(
-                `/restaurants/${restaurantId}/dishes/${dishId}/unpublish`,
-                {},
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
-            await fetchDishes();
-        } catch (err) {
-            console.error("Failed to unpublish dish", err);
-            alert(" Failed to unpublish dish");
+            await unpublishDish(dishId);
+            setSnackbar({
+                open: true,
+                message: "⏸ Dish unpublished",
+                severity: "success",
+            });
+        } catch {
+            setSnackbar({
+                open: true,
+                message: "Failed to unpublish dish",
+                severity: "error",
+            });
         }
     };
 
-    //navigate to edit page
     const handleEdit = (dishId: string) => {
         navigate(`/owner/dishes/${dishId}/edit`);
     };
 
-    if (loading) {
+    const handleCloseSnackbar = () =>
+        setSnackbar((prev) => ({ ...prev, open: false }));
+
+    if (isLoading) {
         return (
             <Container sx={{ mt: 10, textAlign: "center" }}>
                 <CircularProgress />
@@ -127,9 +119,20 @@ export default function OwnerDishesPage() {
         );
     }
 
+    if (isError) {
+        return (
+            <Container sx={{ mt: 10, textAlign: "center" }}>
+                <Typography color="error">
+                    Failed to load dishes: {error?.message}
+                </Typography>
+            </Container>
+        );
+    }
+
     return (
         <Box
             sx={{
+                position: "relative",
                 minHeight: "100vh",
                 backgroundImage: 'url("../images/background.png")',
                 backgroundSize: "cover",
@@ -139,9 +142,19 @@ export default function OwnerDishesPage() {
                 justifyContent: "center",
                 alignItems: "flex-start",
                 py: 6,
+                "&::before": {
+                    content: '""',
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    height: "100%",
+                    backgroundColor: "rgba(0,0,0,0.55)",
+                    zIndex: 1,
+                },
             }}
         >
-            <Container maxWidth="lg">
+            <Container maxWidth="lg" sx={{ position: "relative", zIndex: 2, color: "#fff" }}>
                 <Box
                     display="flex"
                     justifyContent="space-between"
@@ -154,19 +167,19 @@ export default function OwnerDishesPage() {
                     <Button
                         variant="outlined"
                         color="primary"
-                        onClick={() => navigate("/owner/dashboard")}
+                        onClick={() => navigate("/")}
                     >
                         ⬅ Back to Dashboard
                     </Button>
                 </Box>
 
                 {dishes.length === 0 ? (
-                    <Typography textAlign="center" color="text.secondary">
+                    <Typography textAlign="center" color="rgba(255,255,255,0.8)">
                         No dishes found yet.
                     </Typography>
                 ) : (
                     <Grid container spacing={3}>
-                        {dishes.map((dish) => (
+                        {dishes.map((dish: Dish) => (
                             <Grid item key={dish.dishId} xs={12} sm={6} md={4} lg={3}>
                                 <Card
                                     sx={{
@@ -226,10 +239,9 @@ export default function OwnerDishesPage() {
                                     <CardActions>
                                         {dish.availability === "DRAFT" && (
                                             <Button size="small" onClick={() => handleEdit(dish.dishId)}>
-                                                ✏️ Edit
+                                                Edit
                                             </Button>
                                         )}
-
                                         {(dish.availability === "DRAFT" ||
                                             dish.availability === "UNPUBLISHED") && (
                                             <Button
@@ -237,10 +249,9 @@ export default function OwnerDishesPage() {
                                                 color="success"
                                                 onClick={() => handlePublish(dish.dishId)}
                                             >
-                                                 Publish
+                                                Publish
                                             </Button>
                                         )}
-
                                         {dish.availability === "PUBLISHED" && (
                                             <Button
                                                 size="small"
@@ -256,6 +267,22 @@ export default function OwnerDishesPage() {
                         ))}
                     </Grid>
                 )}
+
+                <Snackbar
+                    open={snackbar.open}
+                    autoHideDuration={3000}
+                    onClose={handleCloseSnackbar}
+                    anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+                >
+                    <Alert
+                        onClose={handleCloseSnackbar}
+                        severity={snackbar.severity}
+                        variant="filled"
+                        sx={{ width: "100%" }}
+                    >
+                        {snackbar.message}
+                    </Alert>
+                </Snackbar>
             </Container>
         </Box>
     );

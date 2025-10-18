@@ -1,6 +1,6 @@
 import React from "react";
 import { useParams, Link } from "react-router-dom";
-import { useDishes } from "../hooks/useDishes";
+import { useDishesCustomer } from "../hooks/useDishesCustomer";
 import { useBasket } from "../context/BasketContext";
 import {
     Box,
@@ -22,7 +22,7 @@ import AddShoppingCartIcon from "@mui/icons-material/AddShoppingCart";
 const RestaurantDetailsPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const restaurantId = id ?? "";
-    const { data: dishes, isLoading, isError, error } = useDishes(restaurantId);
+    const { data: dishes, isLoading, isError, error } = useDishesCustomer(restaurantId);
     const { addItem, items } = useBasket();
 
     if (isLoading) {
@@ -44,18 +44,30 @@ const RestaurantDetailsPage: React.FC = () => {
     return (
         <Box
             sx={{
+                position: "relative",
                 minHeight: "100vh",
                 backgroundImage: 'url("../images/background.png")',
                 backgroundSize: "cover",
                 backgroundPosition: "center",
+                backgroundRepeat: "no-repeat",
                 backgroundAttachment: "fixed",
-                p: 4,
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
+                p: 4,
+                "&::before": {
+                    content: '""',
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    height: "100%",
+                    backgroundColor: "rgba(0,0,0,0.55)",
+                    zIndex: 1,
+                },
             }}
         >
-            <Box sx={{ maxWidth: 1100, width: "100%" }}>
+            <Box sx={{ maxWidth: 1100, width: "100%", position: "relative", zIndex: 2 }}>
                 <Typography
                     variant="h3"
                     sx={{ mb: 1, fontWeight: 700, textAlign: "center", color: "#fff" }}
@@ -173,13 +185,12 @@ const RestaurantDetailsPage: React.FC = () => {
                 </Grid>
             </Box>
 
-            {/* Floating Basket Button */}
             <Box
                 sx={{
                     position: "fixed",
                     bottom: 30,
                     right: 30,
-                    zIndex: 1000,
+                    zIndex: 2000,
                 }}
             >
                 <Link to="/basket" style={{ textDecoration: "none" }}>
@@ -196,7 +207,6 @@ const RestaurantDetailsPage: React.FC = () => {
                                 fontSize: "0.8rem",
                                 fontWeight: 600,
                                 transform: "translate(25%, -25%)",
-                                zIndex: 2000,
                             },
                         }}
                     >

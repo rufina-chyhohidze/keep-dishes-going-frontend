@@ -1,7 +1,11 @@
 import React, { useEffect } from "react";
 import { useBasket } from "../context/BasketContext";
-import api from "../api.ts";
+import api from "../api";
 import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useNavigate } from "react-router-dom";
+
 import {
     Box,
     Button,
@@ -17,15 +21,18 @@ import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
 import DeleteIcon from "@mui/icons-material/Delete";
 
-interface CustomerFormData {
-    name: string;
-    email: string;
-    street: string;
-    number: string;
-    postalCode: string;
-    city: string;
-    country: string;
-}
+// 🧾 Zod schema for validation
+const customerSchema = z.object({
+    name: z.string().min(1, "Name is required"),
+    email: z.string().email("Invalid email address"),
+    street: z.string().min(1, "Street is required"),
+    number: z.string().min(1, "Number is required"),
+    postalCode: z.string().min(1, "Postal code is required"),
+    city: z.string().min(1, "City is required"),
+    country: z.string().min(1, "Country is required"),
+});
+
+type CustomerFormData = z.infer<typeof customerSchema>;
 
 const BasketPage: React.FC = () => {
     const {
@@ -37,6 +44,11 @@ const BasketPage: React.FC = () => {
         clearBasket,
     } = useBasket();
 
+    const navigate = useNavigate();
+
+    // 🧭 Persist restaurantId from context
+    const storedRestaurantId = restaurantId;
+
     useEffect(() => {
         console.log("🧺 Basket updated:", items);
     }, [items]);
@@ -46,7 +58,7 @@ const BasketPage: React.FC = () => {
         handleSubmit,
         formState: { errors },
     } = useForm<CustomerFormData>({
-        mode: "onSubmit", // ensures validation on submit
+        resolver: zodResolver(customerSchema),
     });
 
     const totalPrice = (items || []).reduce(
@@ -54,18 +66,19 @@ const BasketPage: React.FC = () => {
         0
     );
 
+    // 🧾 Submit handler
     const placeOrder = async (data: CustomerFormData) => {
         if (!items || items.length === 0) {
             alert("🛒 Basket is empty");
             return;
         }
-        if (!restaurantId) {
+        if (!storedRestaurantId) {
             alert("Missing restaurant ID");
             return;
         }
 
         const payload = {
-            restaurantId,
+            restaurantId: storedRestaurantId,
             ...data,
             orderLines: items.map((i) => ({
                 dishId: i.dishId,
@@ -81,8 +94,8 @@ const BasketPage: React.FC = () => {
 
         try {
             await api.post("/api/orders", payload);
-            alert("✅ Order placed successfully!");
-            clearBasket();
+            alert("Order placed successfully!");
+            clearBasket(); // basket cleared but restaurantId remains persisted
         } catch (err) {
             console.error("Failed to place order", err);
             alert("Failed to place order");
@@ -92,18 +105,30 @@ const BasketPage: React.FC = () => {
     return (
         <Box
             sx={{
+                position: "relative",
                 minHeight: "100vh",
                 backgroundImage: 'url("../images/background.png")',
                 backgroundSize: "cover",
                 backgroundPosition: "center",
+                backgroundRepeat: "no-repeat",
                 backgroundAttachment: "fixed",
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
                 p: 3,
+                "&::before": {
+                    content: '""',
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    height: "100%",
+                    backgroundColor: "rgba(0,0,0,0.55)",
+                    zIndex: 1,
+                },
             }}
         >
-            <Box sx={{ maxWidth: 800, width: "100%" }}>
+            <Box sx={{ maxWidth: 800, width: "100%", position: "relative", zIndex: 2 }}>
                 <Typography
                     variant="h3"
                     sx={{
@@ -127,17 +152,38 @@ const BasketPage: React.FC = () => {
                 </Typography>
 
                 {!items || items.length === 0 ? (
-                    <Typography
-                        variant="body1"
-                        sx={{
-                            color: "#fff",
-                            textAlign: "center",
-                            fontSize: "1.2rem",
-                            mt: 4,
-                        }}
-                    >
-                        Your basket is empty.
-                    </Typography>
+                    <Box textAlign="center">
+                        <Typography
+                            variant="body1"
+                            sx={{
+                                color: "#fff",
+                                textAlign: "center",
+                                fontSize: "1.2rem",
+                                mt: 4,
+                            }}
+                        >
+                            Your basket is empty.
+                        </Typography>
+                        {storedRestaurantId && (
+                            <Button
+                                variant="contained"
+                                color="primary"
+                                sx={{
+                                    mt: 3,
+                                    py: 1,
+                                    px: 4,
+                                    borderRadius: 3,
+                                    textTransform: "none",
+                                    fontWeight: 600,
+                                }}
+                                onClick={() =>
+                                    navigate(`/restaurants/${storedRestaurantId}`)
+                                }
+                            >
+                                ← Back to Restaurant
+                            </Button>
+                        )}
+                    </Box>
                 ) : (
                     <>
                         {items.map((item) => (
@@ -221,7 +267,6 @@ const BasketPage: React.FC = () => {
                             💰 Total: € {totalPrice.toFixed(2)}
                         </Typography>
 
-                        {/* FORM START */}
                         <form onSubmit={handleSubmit(placeOrder)}>
                             <Box
                                 sx={{
@@ -242,7 +287,7 @@ const BasketPage: React.FC = () => {
                                         <TextField
                                             label="Name"
                                             fullWidth
-                                            {...register("name", { required: "Name is required" })}
+                                            {...register("name")}
                                             error={!!errors.name}
                                             helperText={errors.name?.message}
                                         />
@@ -251,13 +296,7 @@ const BasketPage: React.FC = () => {
                                         <TextField
                                             label="Email"
                                             fullWidth
-                                            {...register("email", {
-                                                required: "Email is required",
-                                                pattern: {
-                                                    value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                                                    message: "Invalid email address",
-                                                },
-                                            })}
+                                            {...register("email")}
                                             error={!!errors.email}
                                             helperText={errors.email?.message}
                                         />
@@ -266,7 +305,7 @@ const BasketPage: React.FC = () => {
                                         <TextField
                                             label="Street"
                                             fullWidth
-                                            {...register("street", { required: "Street is required" })}
+                                            {...register("street")}
                                             error={!!errors.street}
                                             helperText={errors.street?.message}
                                         />
@@ -275,7 +314,7 @@ const BasketPage: React.FC = () => {
                                         <TextField
                                             label="Number"
                                             fullWidth
-                                            {...register("number", { required: "Number is required" })}
+                                            {...register("number")}
                                             error={!!errors.number}
                                             helperText={errors.number?.message}
                                         />
@@ -284,7 +323,7 @@ const BasketPage: React.FC = () => {
                                         <TextField
                                             label="Postal Code"
                                             fullWidth
-                                            {...register("postalCode", { required: "Postal code is required" })}
+                                            {...register("postalCode")}
                                             error={!!errors.postalCode}
                                             helperText={errors.postalCode?.message}
                                         />
@@ -293,7 +332,7 @@ const BasketPage: React.FC = () => {
                                         <TextField
                                             label="City"
                                             fullWidth
-                                            {...register("city", { required: "City is required" })}
+                                            {...register("city")}
                                             error={!!errors.city}
                                             helperText={errors.city?.message}
                                         />
@@ -302,7 +341,7 @@ const BasketPage: React.FC = () => {
                                         <TextField
                                             label="Country"
                                             fullWidth
-                                            {...register("country", { required: "Country is required" })}
+                                            {...register("country")}
                                             error={!!errors.country}
                                             helperText={errors.country?.message}
                                         />
@@ -310,7 +349,7 @@ const BasketPage: React.FC = () => {
                                 </Grid>
                             </Box>
 
-                            {/* Fixed bottom button INSIDE the form ✅ */}
+                            {/* Fixed footer */}
                             <Box
                                 sx={{
                                     position: "fixed",
@@ -318,11 +357,12 @@ const BasketPage: React.FC = () => {
                                     left: 0,
                                     right: 0,
                                     p: 2,
-                                    background: "rgba(255,255,255,0.95)",
+                                    background: "rgba(0,0,0,0.6)",
                                     backdropFilter: "blur(10px)",
-                                    boxShadow: "0 -4px 20px rgba(0,0,0,0.15)",
+                                    boxShadow: "0 -4px 20px rgba(0,0,0,0.3)",
                                     display: "flex",
                                     justifyContent: "center",
+                                    zIndex: 3,
                                 }}
                             >
                                 <Button
@@ -338,11 +378,10 @@ const BasketPage: React.FC = () => {
                                         textTransform: "none",
                                     }}
                                 >
-                                    🛍 Place Order
+                                    Place Order
                                 </Button>
                             </Box>
                         </form>
-                        {/* FORM END */}
                     </>
                 )}
             </Box>

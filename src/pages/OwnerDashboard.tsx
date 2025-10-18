@@ -10,25 +10,23 @@ import {
     Button,
 } from "@mui/material";
 import DishForm from "../components/DishForm";
-import api from "../api";
 import { useSecurityContext } from "../context/SecurityContext";
 import { useNavigate } from "react-router-dom";
+import api from "../api";
+import { useDishesOwner } from "../hooks/useDishesOwner";
 
 export default function OwnerDashboard() {
     const { isAuthenticated, getToken } = useSecurityContext();
     const [restaurantId, setRestaurantId] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
-    const [snackbar, setSnackbar] = useState<{
-        open: boolean;
-        message: string;
-        severity: "success" | "error";
-    }>({
+    const [snackbar, setSnackbar] = useState({
         open: false,
         message: "",
-        severity: "success",
+        severity: "success" as "success" | "error",
     });
 
     const navigate = useNavigate();
+    const token = getToken();
 
     useEffect(() => {
         if (!isAuthenticated()) {
@@ -38,12 +36,6 @@ export default function OwnerDashboard() {
 
         const fetchRestaurant = async () => {
             try {
-                const token = getToken();
-                if (!token) {
-                    window.location.href = "/";
-                    return;
-                }
-
                 const res = await api.get("/owner/me/restaurant", {
                     headers: { Authorization: `Bearer ${token}` },
                 });
@@ -62,22 +54,20 @@ export default function OwnerDashboard() {
         };
 
         fetchRestaurant();
-    }, [isAuthenticated, getToken]);
+    }, [isAuthenticated, token]);
+
+    const { createDish } = useDishesOwner(restaurantId, token);
 
     const handleCreate = async (newDish: any) => {
-        if (!restaurantId) return;
         try {
-            await api.post(`/restaurants/${restaurantId}/dishes`, newDish, {
-                headers: { Authorization: `Bearer ${getToken()}` },
-            });
-
+            await createDish(newDish);
             setSnackbar({
                 open: true,
                 message: "Dish created successfully!",
                 severity: "success",
             });
         } catch (err) {
-            console.error(" Failed to create dish", err);
+            console.error("Failed to create dish", err);
             setSnackbar({
                 open: true,
                 message: "Failed to create dish. Please try again.",
@@ -86,9 +76,8 @@ export default function OwnerDashboard() {
         }
     };
 
-    const handleCloseSnackbar = () => {
+    const handleCloseSnackbar = () =>
         setSnackbar((prev) => ({ ...prev, open: false }));
-    };
 
     if (loading) {
         return (
@@ -104,6 +93,7 @@ export default function OwnerDashboard() {
     return (
         <Box
             sx={{
+                position: "relative",
                 minHeight: "100vh",
                 backgroundImage: 'url("../images/background.png")',
                 backgroundSize: "cover",
@@ -113,11 +103,23 @@ export default function OwnerDashboard() {
                 justifyContent: "center",
                 alignItems: "center",
                 p: 4,
+                "&::before": {
+                    content: '""',
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    height: "100%",
+                    backgroundColor: "rgba(0,0,0,0.55)",
+                    zIndex: 1,
+                },
             }}
         >
             <Container
                 maxWidth="md"
                 sx={{
+                    position: "relative",
+                    zIndex: 2,
                     display: "flex",
                     flexDirection: "column",
                     gap: 4,
@@ -134,6 +136,7 @@ export default function OwnerDashboard() {
                         component="h1"
                         fontWeight="bold"
                         gutterBottom
+                        sx={{ color: "#333" }}
                     >
                         🍽 Owner Dashboard
                     </Typography>

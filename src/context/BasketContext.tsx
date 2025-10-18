@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 
 export interface BasketItem {
     dishId: string;
@@ -15,13 +15,26 @@ interface BasketContextType {
     decreaseQuantity: (dishId: string) => void;
     removeItem: (dishId: string) => void;
     clearBasket: () => void;
+    resetRestaurant: () => void; // optional helper
 }
 
 const BasketContext = createContext<BasketContextType | undefined>(undefined);
 
 export const BasketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [items, setItems] = useState<BasketItem[]>([]);
-    const [restaurantId, setRestaurantId] = useState<string | null>(null);
+    const [restaurantId, setRestaurantId] = useState<string | null>(() => {
+        //  loading from localStorage on mount
+        return localStorage.getItem("lastRestaurantId");
+    });
+
+    // i persist restaurantId whenever it changes
+    useEffect(() => {
+        if (restaurantId) {
+            localStorage.setItem("lastRestaurantId", restaurantId);
+        } else {
+            localStorage.removeItem("lastRestaurantId");
+        }
+    }, [restaurantId]);
 
     const addItem = (item: BasketItem, rId: string) => {
         console.log("🛒 Adding item:", item, "for restaurant:", rId);
@@ -31,13 +44,15 @@ export const BasketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 const existing = prev.find(i => i.dishId === item.dishId);
                 if (existing) {
                     return prev.map(i =>
-                        i.dishId === item.dishId ? { ...i, quantity: i.quantity + item.quantity } : i
+                        i.dishId === item.dishId
+                            ? { ...i, quantity: i.quantity + item.quantity }
+                            : i
                     );
                 }
                 return [...prev, item];
             });
         } else {
-            if (confirm("Clear basket from another restaurant?")) {
+            if (confirm("Your basket has items from another restaurant. Clear it?")) {
                 setRestaurantId(rId);
                 setItems([item]);
             }
@@ -46,13 +61,17 @@ export const BasketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     const increaseQuantity = (dishId: string) =>
         setItems(prev =>
-            prev.map(i => (i.dishId === dishId ? { ...i, quantity: i.quantity + 1 } : i))
+            prev.map(i =>
+                i.dishId === dishId ? { ...i, quantity: i.quantity + 1 } : i
+            )
         );
 
     const decreaseQuantity = (dishId: string) =>
         setItems(prev =>
             prev
-                .map(i => (i.dishId === dishId ? { ...i, quantity: i.quantity - 1 } : i))
+                .map(i =>
+                    i.dishId === dishId ? { ...i, quantity: i.quantity - 1 } : i
+                )
                 .filter(i => i.quantity > 0)
         );
 
@@ -61,12 +80,26 @@ export const BasketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     const clearBasket = () => {
         setItems([]);
+    };
+
+    const resetRestaurant = () => {
+        setItems([]);
         setRestaurantId(null);
+        localStorage.removeItem("lastRestaurantId");
     };
 
     return (
         <BasketContext.Provider
-            value={{ items, restaurantId, addItem, increaseQuantity, decreaseQuantity, removeItem, clearBasket }}
+            value={{
+                items,
+                restaurantId,
+                addItem,
+                increaseQuantity,
+                decreaseQuantity,
+                removeItem,
+                clearBasket,
+                resetRestaurant,
+            }}
         >
             {children}
         </BasketContext.Provider>
