@@ -1,90 +1,133 @@
+import React from "react";
 import {
     Card,
     CardMedia,
     CardContent,
     Typography,
     Button,
-    Chip,
-    CardActions,
     Box,
+    Chip,
 } from "@mui/material";
-import type {Dish} from "../model/Dish";
+import type {Dish} from "../model/Dish.ts";
 
 interface DishCardProps {
-    dish: Dish;
-    onPublish: (id: string) => void;
-    onUnpublish: (id: string) => void;
-    onEdit: (id: string) => void;
+    dish: Dish
+    isOwner: boolean;
+    onAddToBasket?: (dishId: string) => void;
+    onToggleStock?: (dishId: string, newStatus: "IN_STOCK" | "OUT_OF_STOCK") => void;
 }
 
-export default function DishCard({ dish, onPublish, onUnpublish, onEdit }: DishCardProps) {
-    const getChipColor = (state: string) => {
-        switch (state) {
-            case "PUBLISHED":
-                return "success";
-            case "DRAFT":
-                return "warning";
-            case "UNPUBLISHED":
-                return "error";
-            default:
-                return "default";
-        }
+export const DishCard: React.FC<DishCardProps> = ({
+                                                      dish,
+                                                      isOwner,
+                                                      onAddToBasket,
+                                                      onToggleStock,
+                                                  }) => {
+    const isOutOfStock = dish.stockStatus === "OUT_OF_STOCK";
+
+    const handleToggleStock = () => {
+        const newStatus = isOutOfStock ? "IN_STOCK" : "OUT_OF_STOCK";
+        onToggleStock?.(dish.dishId, newStatus);
     };
 
     return (
-        <Card sx={{ height: "100%", display: "flex", flexDirection: "column", position: "relative" }}>
-            <Box sx={{ position: "absolute", top: 8, left: 8 }}>
-                <Chip label={dish.availability} color={getChipColor(dish.availability)} size="small" />
-            </Box>
-
+        <Card
+            sx={{
+                display: "flex",
+                flexDirection: "column",
+                height: "100%",
+                width: 300,
+                borderRadius: 3,
+                backdropFilter: "blur(8px)",
+                background: "rgba(255, 255, 255, 0.9)",
+                boxShadow: "0 6px 20px rgba(0,0,0,0.12)",
+                transition: "transform 0.25s ease, box-shadow 0.25s ease",
+                "&:hover": {
+                    transform: "translateY(-6px)",
+                    boxShadow: "0 10px 30px rgba(0,0,0,0.2)",
+                },
+            }}
+        >
             <CardMedia
                 component="img"
-                height="160"
-                image={dish.pictureUrl?.trim() || "/placeholder-image.jpg"}
+                height="180"
+                image={dish.pictureUrl || "/placeholder.jpg"}
                 alt={dish.name}
-                sx={{ objectFit: "cover" }}
+                sx={{
+                    objectFit: "cover",
+                    borderTopLeftRadius: "12px",
+                    borderTopRightRadius: "12px",
+                }}
             />
-
             <CardContent sx={{ flexGrow: 1 }}>
-                <Typography variant="h6" gutterBottom noWrap>
+                <Typography
+                    variant="h6"
+                    sx={{ fontWeight: 700, mb: 1, lineHeight: 1.2 }}
+                >
                     {dish.name}
                 </Typography>
                 <Typography
                     variant="body2"
-                    color="text.secondary"
                     sx={{
-                        display: "-webkit-box",
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: "vertical",
-                        overflow: "hidden",
+                        color: "text.secondary",
+                        mb: 1.5,
+                        minHeight: 40,
                     }}
                 >
-                    {dish.description || "No description"}
+                    {dish.description || "No description available"}
                 </Typography>
-                <Typography variant="subtitle1" fontWeight="bold" sx={{ mt: 1 }}>
-                    € {dish.price?.toFixed(2)}
+                <Typography
+                    variant="h6"
+                    sx={{
+                        fontWeight: 600,
+                        color: "primary.main",
+                        mb: 2,
+                    }}
+                >
+                    € {dish.price.toFixed(2)}
                 </Typography>
+
+                <Box sx={{ mb: 2 }}>
+                    <Chip
+                        label={isOutOfStock ? "Out of Stock" : "In Stock"}
+                        color={isOutOfStock ? "error" : "success"}
+                        size="small"
+                    />
+                </Box>
+
+                {!isOwner && (
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        fullWidth
+                        disabled={isOutOfStock}
+                        onClick={() => onAddToBasket?.(dish.dishId)}
+                        sx={{
+                            textTransform: "none",
+                            fontWeight: 600,
+                            borderRadius: 2,
+                        }}
+                    >
+                        {isOutOfStock ? "Unavailable" : "Add to Basket"}
+                    </Button>
+                )}
+
+                {isOwner && (
+                    <Button
+                        variant="outlined"
+                        color={isOutOfStock ? "success" : "error"}
+                        fullWidth
+                        onClick={handleToggleStock}
+                        sx={{
+                            textTransform: "none",
+                            fontWeight: 600,
+                            borderRadius: 2,
+                        }}
+                    >
+                        {isOutOfStock ? "Mark as In Stock" : "Mark as Out of Stock"}
+                    </Button>
+                )}
             </CardContent>
-
-            <CardActions>
-                {dish.availability === "DRAFT" && (
-                    <Button size="small" onClick={() => onEdit(dish.dishId)}>
-                        ✏️ Edit
-                    </Button>
-                )}
-
-                {(dish.availability === "DRAFT" || dish.availability === "UNPUBLISHED") && (
-                    <Button size="small" color="success" onClick={() => onPublish(dish.dishId)}>
-                        Publish
-                    </Button>
-                )}
-
-                {dish.availability === "PUBLISHED" && (
-                    <Button size="small" color="warning" onClick={() => onUnpublish(dish.dishId)}>
-                        ⏸ Unpublish
-                    </Button>
-                )}
-            </CardActions>
         </Card>
     );
-}
+};

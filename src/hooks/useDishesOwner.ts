@@ -6,20 +6,20 @@ import {
     publishDish,
     unpublishDish,
     deleteDish,
+    markDishInStock,
+    markDishOutOfStock,
 } from "../api/dishesApi";
 import type { Dish } from "../model/Dish";
 
 export function useDishesOwner(restaurantId: string | null, token: string | null) {
     const queryClient = useQueryClient();
 
-    // 📥 Fetch all dishes (including unpublished)
     const dishesQuery = useQuery<Dish[], Error>({
         queryKey: ["ownerDishes", restaurantId],
         queryFn: () => getAllDishes(restaurantId!, token!),
         enabled: !!restaurantId && !!token,
     });
 
-    // ➕ Create a dish
     const createDishMutation = useMutation({
         mutationFn: (data: Partial<Dish>) => createDish(restaurantId!, data, token!),
         onSuccess: () => {
@@ -27,7 +27,6 @@ export function useDishesOwner(restaurantId: string | null, token: string | null
         },
     });
 
-    // 📝 Edit dish
     const editDishMutation = useMutation({
         mutationFn: ({ dishId, data }: { dishId: string; data: Partial<Dish> }) =>
             editDish(restaurantId!, dishId, data, token!),
@@ -36,7 +35,6 @@ export function useDishesOwner(restaurantId: string | null, token: string | null
         },
     });
 
-    // 🚀 Publish
     const publishDishMutation = useMutation({
         mutationFn: (dishId: string) => publishDish(restaurantId!, dishId, token!),
         onSuccess: () => {
@@ -44,7 +42,6 @@ export function useDishesOwner(restaurantId: string | null, token: string | null
         },
     });
 
-    // ⏸ Unpublish
     const unpublishDishMutation = useMutation({
         mutationFn: (dishId: string) => unpublishDish(restaurantId!, dishId, token!),
         onSuccess: () => {
@@ -52,7 +49,20 @@ export function useDishesOwner(restaurantId: string | null, token: string | null
         },
     });
 
-    // 🗑 Delete
+    const markInStockMutation = useMutation({
+        mutationFn: (dishId: string) => markDishInStock(restaurantId!, dishId, token!),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["ownerDishes", restaurantId] });
+        },
+    });
+
+    const markOutOfStockMutation = useMutation({
+        mutationFn: (dishId: string) => markDishOutOfStock(restaurantId!, dishId, token!),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["ownerDishes", restaurantId] });
+        },
+    });
+
     const deleteDishMutation = useMutation({
         mutationFn: (dishId: string) => deleteDish(restaurantId!, dishId, token!),
         onSuccess: () => {
@@ -71,5 +81,8 @@ export function useDishesOwner(restaurantId: string | null, token: string | null
         publishDish: publishDishMutation.mutateAsync,
         unpublishDish: unpublishDishMutation.mutateAsync,
         deleteDish: deleteDishMutation.mutateAsync,
+
+        markInStock: markInStockMutation.mutateAsync,
+        markOutOfStock: markOutOfStockMutation.mutateAsync,
     };
 }

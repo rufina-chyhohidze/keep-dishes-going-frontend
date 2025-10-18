@@ -2,6 +2,7 @@ import React from "react";
 import { useParams, Link } from "react-router-dom";
 import { useDishesCustomer } from "../hooks/useDishesCustomer";
 import { useBasket } from "../context/BasketContext";
+import type { Dish } from "../model/Dish";
 import {
     Box,
     Card,
@@ -15,6 +16,7 @@ import {
     Divider,
     Badge,
     Fab,
+    Chip,
 } from "@mui/material";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import AddShoppingCartIcon from "@mui/icons-material/AddShoppingCart";
@@ -88,100 +90,116 @@ const RestaurantDetailsPage: React.FC = () => {
                 <Divider sx={{ mb: 4, bgcolor: "rgba(255,255,255,0.3)" }} />
 
                 <Grid container spacing={3} justifyContent="center">
-                    {dishes?.map((dish) => (
-                        <Grid
-                            item
-                            xs={12}
-                            sm={6}
-                            md={4}
-                            key={dish.dishId}
-                            sx={{ display: "flex", justifyContent: "center" }}
-                        >
-                            <Card
-                                sx={{
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    height: "100%",
-                                    width: 300,
-                                    borderRadius: 3,
-                                    backdropFilter: "blur(8px)",
-                                    background: "rgba(255, 255, 255, 0.9)",
-                                    boxShadow: "0 6px 20px rgba(0,0,0,0.12)",
-                                    transition: "transform 0.25s ease, box-shadow 0.25s ease",
-                                    "&:hover": {
-                                        transform: "translateY(-6px)",
-                                        boxShadow: "0 10px 30px rgba(0,0,0,0.2)",
-                                    },
-                                }}
+                    {dishes?.map((dish: Dish) => {
+                        const isOutOfStock = dish.stockStatus === "OUT_OF_STOCK";
+
+                        return (
+                            <Grid
+                                item
+                                xs={12}
+                                sm={6}
+                                md={4}
+                                key={dish.dishId}
+                                sx={{ display: "flex", justifyContent: "center" }}
                             >
-                                <CardMedia
-                                    component="img"
-                                    height="180"
-                                    image={dish.pictureUrl || "/placeholder.jpg"}
-                                    alt={dish.name}
+                                <Card
                                     sx={{
-                                        objectFit: "cover",
-                                        borderTopLeftRadius: "12px",
-                                        borderTopRightRadius: "12px",
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        height: "100%",
+                                        width: 300,
+                                        borderRadius: 3,
+                                        backdropFilter: "blur(8px)",
+                                        background: "rgba(255, 255, 255, 0.9)",
+                                        boxShadow: "0 6px 20px rgba(0,0,0,0.12)",
+                                        transition:
+                                            "transform 0.25s ease, box-shadow 0.25s ease",
+                                        "&:hover": {
+                                            transform: "translateY(-6px)",
+                                            boxShadow: "0 10px 30px rgba(0,0,0,0.2)",
+                                        },
                                     }}
-                                />
-                                <CardContent sx={{ flexGrow: 1 }}>
-                                    <Typography
-                                        variant="h6"
-                                        sx={{ fontWeight: 700, mb: 1, lineHeight: 1.2 }}
-                                    >
-                                        {dish.name}
-                                    </Typography>
-                                    <Typography
-                                        variant="body2"
+                                >
+                                    <CardMedia
+                                        component="img"
+                                        height="180"
+                                        image={dish.pictureUrl || "/placeholder.jpg"}
+                                        alt={dish.name}
                                         sx={{
-                                            color: "text.secondary",
-                                            mb: 1.5,
-                                            minHeight: 40,
+                                            objectFit: "cover",
+                                            borderTopLeftRadius: "12px",
+                                            borderTopRightRadius: "12px",
                                         }}
-                                    >
-                                        {dish.description || "No description available"}
-                                    </Typography>
-                                    <Typography
-                                        variant="h6"
-                                        sx={{
-                                            fontWeight: 600,
-                                            color: "primary.main",
-                                        }}
-                                    >
-                                        € {dish.price.toFixed(2)}
-                                    </Typography>
-                                </CardContent>
-                                <Box sx={{ p: 2, pt: 0 }}>
-                                    <Button
-                                        fullWidth
-                                        variant="contained"
-                                        color="primary"
-                                        startIcon={<AddShoppingCartIcon />}
-                                        sx={{
-                                            py: 1,
-                                            textTransform: "none",
-                                            fontWeight: 600,
-                                            borderRadius: 2,
-                                        }}
-                                        onClick={() =>
-                                            addItem(
-                                                {
-                                                    dishId: dish.dishId,
-                                                    name: dish.name,
-                                                    price: dish.price,
-                                                    quantity: 1,
-                                                },
-                                                restaurantId
-                                            )
-                                        }
-                                    >
-                                        Add to Basket
-                                    </Button>
-                                </Box>
-                            </Card>
-                        </Grid>
-                    ))}
+                                    />
+                                    <CardContent sx={{ flexGrow: 1 }}>
+                                        <Typography
+                                            variant="h6"
+                                            sx={{ fontWeight: 700, mb: 1, lineHeight: 1.2 }}
+                                        >
+                                            {dish.name}
+                                        </Typography>
+                                        <Typography
+                                            variant="body2"
+                                            sx={{
+                                                color: "text.secondary",
+                                                mb: 1.5,
+                                                minHeight: 40,
+                                            }}
+                                        >
+                                            {dish.description || "No description available"}
+                                        </Typography>
+                                        <Typography
+                                            variant="h6"
+                                            sx={{
+                                                fontWeight: 600,
+                                                color: "primary.main",
+                                                mb: 1,
+                                            }}
+                                        >
+                                            € {dish.price.toFixed(2)}
+                                        </Typography>
+                                        <Chip
+                                            label={
+                                                isOutOfStock ? "Out of Stock" : "In Stock"
+                                            }
+                                            color={isOutOfStock ? "error" : "success"}
+                                            size="small"
+                                        />
+                                    </CardContent>
+                                    <Box sx={{ p: 2, pt: 0 }}>
+                                        <Button
+                                            fullWidth
+                                            variant="contained"
+                                            color="primary"
+                                            startIcon={<AddShoppingCartIcon />}
+                                            sx={{
+                                                py: 1,
+                                                textTransform: "none",
+                                                fontWeight: 600,
+                                                borderRadius: 2,
+                                            }}
+                                            disabled={isOutOfStock}
+                                            onClick={() =>
+                                                addItem(
+                                                    {
+                                                        dishId: dish.dishId,
+                                                        name: dish.name,
+                                                        price: dish.price,
+                                                        quantity: 1,
+                                                    },
+                                                    restaurantId
+                                                )
+                                            }
+                                        >
+                                            {isOutOfStock
+                                                ? "Unavailable"
+                                                : "Add to Basket"}
+                                        </Button>
+                                    </Box>
+                                </Card>
+                            </Grid>
+                        );
+                    })}
                 </Grid>
             </Box>
 

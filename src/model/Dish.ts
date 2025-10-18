@@ -1,4 +1,5 @@
 export type DishAvailability = "PUBLISHED" | "DRAFT" | "UNPUBLISHED";
+export type StockStatus = "IN_STOCK" | "OUT_OF_STOCK";
 
 export interface Dish {
     dishId: string;
@@ -8,6 +9,5 @@ export interface Dish {
     price: number;
     pictureUrl: string;
     availability: DishAvailability;
-    stockStatus: string;
-    foodTags: string[];
+    stockStatus: StockStatus;
 }

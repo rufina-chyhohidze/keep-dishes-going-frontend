@@ -13,6 +13,7 @@ import {
     Box,
     Snackbar,
     Alert,
+    Stack,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useSecurityContext } from "../context/SecurityContext";
@@ -51,8 +52,16 @@ export default function OwnerDishesPage() {
         fetchRestaurant();
     }, [isAuthenticated, token]);
 
-    const { dishes, isLoading, isError, error, publishDish, unpublishDish } =
-        useDishesOwner(restaurantId, token);
+    const {
+        dishes,
+        isLoading,
+        isError,
+        error,
+        publishDish,
+        unpublishDish,
+        markInStock,
+        markOutOfStock,
+    } = useDishesOwner(restaurantId, token);
 
     const getChipColor = (state: string) => {
         switch (state) {
@@ -96,6 +105,32 @@ export default function OwnerDishesPage() {
             setSnackbar({
                 open: true,
                 message: "Failed to unpublish dish",
+                severity: "error",
+            });
+        }
+    };
+
+    const handleToggleStock = async (dish: Dish) => {
+        try {
+            if (dish.stockStatus === "IN_STOCK") {
+                await markOutOfStock(dish.dishId);
+                setSnackbar({
+                    open: true,
+                    message: " Marked Out of Stock",
+                    severity: "success",
+                });
+            } else {
+                await markInStock(dish.dishId);
+                setSnackbar({
+                    open: true,
+                    message: "Marked In Stock",
+                    severity: "success",
+                });
+            }
+        } catch {
+            setSnackbar({
+                open: true,
+                message: "Failed to update stock status",
                 severity: "error",
             });
         }
@@ -191,10 +226,24 @@ export default function OwnerDishesPage() {
                                         borderRadius: 2,
                                     }}
                                 >
-                                    <Box sx={{ position: "absolute", top: 8, left: 8 }}>
+                                    <Box
+                                        sx={{
+                                            position: "absolute",
+                                            top: 8,
+                                            left: 8,
+                                            display: "flex",
+                                            gap: 1,
+                                            flexWrap: "wrap",
+                                        }}
+                                    >
                                         <Chip
                                             label={dish.availability}
                                             color={getChipColor(dish.availability)}
+                                            size="small"
+                                        />
+                                        <Chip
+                                            label={dish.stockStatus === "IN_STOCK" ? "In Stock" : "Out of Stock"}
+                                            color={dish.stockStatus === "IN_STOCK" ? "success" : "error"}
                                             size="small"
                                         />
                                     </Box>
@@ -236,31 +285,43 @@ export default function OwnerDishesPage() {
                                         </Typography>
                                     </CardContent>
 
-                                    <CardActions>
-                                        {dish.availability === "DRAFT" && (
-                                            <Button size="small" onClick={() => handleEdit(dish.dishId)}>
-                                                Edit
-                                            </Button>
-                                        )}
-                                        {(dish.availability === "DRAFT" ||
-                                            dish.availability === "UNPUBLISHED") && (
-                                            <Button
-                                                size="small"
-                                                color="success"
-                                                onClick={() => handlePublish(dish.dishId)}
-                                            >
-                                                Publish
-                                            </Button>
-                                        )}
-                                        {dish.availability === "PUBLISHED" && (
-                                            <Button
-                                                size="small"
-                                                color="warning"
-                                                onClick={() => handleUnpublish(dish.dishId)}
-                                            >
-                                                ⏸ Unpublish
-                                            </Button>
-                                        )}
+                                    <CardActions sx={{ justifyContent: "space-between", flexWrap: "wrap" }}>
+                                        <Stack direction="row" spacing={1} flexWrap="wrap">
+                                            {dish.availability === "DRAFT" && (
+                                                <Button size="small" onClick={() => handleEdit(dish.dishId)}>
+                                                    Edit
+                                                </Button>
+                                            )}
+                                            {(dish.availability === "DRAFT" ||
+                                                dish.availability === "UNPUBLISHED") && (
+                                                <Button
+                                                    size="small"
+                                                    color="success"
+                                                    onClick={() => handlePublish(dish.dishId)}
+                                                >
+                                                    Publish
+                                                </Button>
+                                            )}
+                                            {dish.availability === "PUBLISHED" && (
+                                                <Button
+                                                    size="small"
+                                                    color="warning"
+                                                    onClick={() => handleUnpublish(dish.dishId)}
+                                                >
+                                                    ⏸ Unpublish
+                                                </Button>
+                                            )}
+                                        </Stack>
+
+                                        <Button
+                                            size="small"
+                                            color={dish.stockStatus === "IN_STOCK" ? "error" : "success"}
+                                            onClick={() => handleToggleStock(dish)}
+                                        >
+                                            {dish.stockStatus === "IN_STOCK"
+                                                ? "Mark Out of Stock"
+                                                : "Mark In Stock"}
+                                        </Button>
                                     </CardActions>
                                 </Card>
                             </Grid>

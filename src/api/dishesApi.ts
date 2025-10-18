@@ -1,5 +1,5 @@
 import api from "../api";
-import type {Dish} from "../model/Dish";
+import type { Dish } from "../model/Dish";
 
 /**
  * Fetch all dishes (including unpublished) for a restaurant (OWNER only)
@@ -22,7 +22,11 @@ export async function getPublishedDishes(restaurantId: string) {
 /**
  * Create a new dish
  */
-export async function createDish(restaurantId: string, data: Partial<Dish>, token: string) {
+export async function createDish(
+    restaurantId: string,
+    data: Partial<Dish>,
+    token: string
+) {
     const res = await api.post(`/restaurants/${restaurantId}/dishes`, data, {
         headers: { Authorization: `Bearer ${token}` },
     });
@@ -47,7 +51,11 @@ export async function editDish(
 /**
  * Publish a dish
  */
-export async function publishDish(restaurantId: string, dishId: string, token: string) {
+export async function publishDish(
+    restaurantId: string,
+    dishId: string,
+    token: string
+) {
     await api.post(
         `/restaurants/${restaurantId}/dishes/${dishId}/publish`,
         {},
@@ -58,7 +66,11 @@ export async function publishDish(restaurantId: string, dishId: string, token: s
 /**
  * Unpublish a dish
  */
-export async function unpublishDish(restaurantId: string, dishId: string, token: string) {
+export async function unpublishDish(
+    restaurantId: string,
+    dishId: string,
+    token: string
+) {
     await api.post(
         `/restaurants/${restaurantId}/dishes/${dishId}/unpublish`,
         {},
@@ -67,10 +79,44 @@ export async function unpublishDish(restaurantId: string, dishId: string, token:
 }
 
 /**
- * Delete a dish (optional — if you ever want it)
+ * Delete a dish
  */
-export async function deleteDish(restaurantId: string, dishId: string, token: string) {
+export async function deleteDish(
+    restaurantId: string,
+    dishId: string,
+    token: string
+) {
     await api.delete(`/restaurants/${restaurantId}/dishes/${dishId}`, {
         headers: { Authorization: `Bearer ${token}` },
     });
+}
+
+/**
+ * Mark dish as OUT OF STOCK
+ */
+export async function markDishOutOfStock(
+    restaurantId: string,
+    dishId: string,
+    token: string
+) {
+    await api.post(
+        `/restaurants/${restaurantId}/dishes/${dishId}/out-of-stock`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+    );
+}
+
+/**
+ *  Mark dish as IN STOCK
+ */
+export async function markDishInStock(
+    restaurantId: string,
+    dishId: string,
+    token: string
+) {
+    await api.post(
+        `/restaurants/${restaurantId}/dishes/${dishId}/in-stock`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+    );
 }
