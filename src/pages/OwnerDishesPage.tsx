@@ -23,6 +23,7 @@ export default function OwnerDishesPage() {
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
 
+    //fetch restaurantId for logged-in owner
     useEffect(() => {
         if (!isAuthenticated()) {
             window.location.href = "/";
@@ -37,13 +38,14 @@ export default function OwnerDishesPage() {
                 });
                 setRestaurantId(res.data.restaurantId);
             } catch (err) {
-                console.error("Failed to fetch restaurant", err);
+                console.error(" Failed to fetch restaurant", err);
             }
         };
 
         fetchRestaurant();
     }, [isAuthenticated, getToken]);
 
+    //fetch dishes when restaurantId is loaded
     useEffect(() => {
         if (restaurantId) {
             fetchDishes();
@@ -58,7 +60,7 @@ export default function OwnerDishesPage() {
             });
             setDishes(res.data);
         } catch (err) {
-            console.error("Failed to fetch dishes", err);
+            console.error(" Failed to fetch dishes", err);
         } finally {
             setLoading(false);
         }
@@ -75,6 +77,43 @@ export default function OwnerDishesPage() {
             default:
                 return "default";
         }
+    };
+
+    // publish a dish
+    const handlePublish = async (dishId: string) => {
+        try {
+            const token = getToken();
+            await api.post(
+                `/restaurants/${restaurantId}/dishes/${dishId}/publish`,
+                {},
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            await fetchDishes();
+        } catch (err) {
+            console.error("Failed to publish dish", err);
+            alert(" Failed to publish dish");
+        }
+    };
+
+    //unpublish a dish
+    const handleUnpublish = async (dishId: string) => {
+        try {
+            const token = getToken();
+            await api.post(
+                `/restaurants/${restaurantId}/dishes/${dishId}/unpublish`,
+                {},
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            await fetchDishes();
+        } catch (err) {
+            console.error("Failed to unpublish dish", err);
+            alert(" Failed to unpublish dish");
+        }
+    };
+
+    //navigate to edit page
+    const handleEdit = (dishId: string) => {
+        navigate(`/owner/dishes/${dishId}/edit`);
     };
 
     if (loading) {
@@ -160,11 +199,7 @@ export default function OwnerDishesPage() {
                                     />
 
                                     <CardContent sx={{ flexGrow: 1 }}>
-                                        <Typography
-                                            variant="h6"
-                                            gutterBottom
-                                            noWrap
-                                        >
+                                        <Typography variant="h6" gutterBottom noWrap>
                                             {dish.name}
                                         </Typography>
                                         <Typography
@@ -189,19 +224,32 @@ export default function OwnerDishesPage() {
                                     </CardContent>
 
                                     <CardActions>
-                                        <Button
-                                            size="small"
-                                            onClick={() => alert(`Edit ${dish.name} coming soon`)}
-                                        >
-                                            ✏️ Edit
-                                        </Button>
-                                        <Button
-                                            size="small"
-                                            color="error"
-                                            onClick={() => alert(`Delete ${dish.name} coming soon`)}
-                                        >
-                                            🗑 Delete
-                                        </Button>
+                                        {dish.availability === "DRAFT" && (
+                                            <Button size="small" onClick={() => handleEdit(dish.dishId)}>
+                                                ✏️ Edit
+                                            </Button>
+                                        )}
+
+                                        {(dish.availability === "DRAFT" ||
+                                            dish.availability === "UNPUBLISHED") && (
+                                            <Button
+                                                size="small"
+                                                color="success"
+                                                onClick={() => handlePublish(dish.dishId)}
+                                            >
+                                                 Publish
+                                            </Button>
+                                        )}
+
+                                        {dish.availability === "PUBLISHED" && (
+                                            <Button
+                                                size="small"
+                                                color="warning"
+                                                onClick={() => handleUnpublish(dish.dishId)}
+                                            >
+                                                ⏸ Unpublish
+                                            </Button>
+                                        )}
                                     </CardActions>
                                 </Card>
                             </Grid>

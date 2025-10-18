@@ -73,14 +73,14 @@ export default function OwnerDashboard() {
 
             setSnackbar({
                 open: true,
-                message: "✅ Dish created successfully!",
+                message: "Dish created successfully!",
                 severity: "success",
             });
         } catch (err) {
-            console.error("❌ Failed to create dish", err);
+            console.error(" Failed to create dish", err);
             setSnackbar({
                 open: true,
-                message: "❌ Failed to create dish. Please try again.",
+                message: "Failed to create dish. Please try again.",
                 severity: "error",
             });
         }
@@ -128,7 +128,6 @@ export default function OwnerDashboard() {
                     boxShadow: 4,
                 }}
             >
-                {/* Header */}
                 <Box textAlign="center">
                     <Typography
                         variant="h3"
@@ -143,7 +142,6 @@ export default function OwnerDashboard() {
                     </Typography>
                 </Box>
 
-                {/* Form Section */}
                 <Paper
                     elevation={4}
                     sx={{
@@ -155,7 +153,6 @@ export default function OwnerDashboard() {
                     <DishForm onSubmit={handleCreate} />
                 </Paper>
 
-                {/* View All Dishes Button */}
                 <Box textAlign="center">
                     <Button
                         variant="contained"
@@ -167,7 +164,6 @@ export default function OwnerDashboard() {
                     </Button>
                 </Box>
 
-                {/* Snackbar Feedback */}
                 <Snackbar
                     open={snackbar.open}
                     autoHideDuration={3000}

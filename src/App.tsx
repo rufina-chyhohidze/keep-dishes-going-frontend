@@ -10,6 +10,7 @@ import { RouteGuard } from "./components/RouteGuard";
 import SecurityContextProvider from "./context/SecurityContextProvider";
 import OwnerDashboard from "./pages/OwnerDashboard.tsx";
 import OwnerDishesPage from "./pages/OwnerDishesPage.tsx";
+import EditDishPage from "./pages/EditDishPage.tsx";
 
 const App: React.FC = () => {
     return (
@@ -45,6 +46,11 @@ const App: React.FC = () => {
                             <OwnerDishesPage />
                         </RouteGuard>
                     }
+                />
+                <Route path="/owner/dishes/:dishId/edit"
+                       element={<RouteGuard>
+                           <EditDishPage />
+                       </RouteGuard>}
                 />
             </Routes>
         </SecurityContextProvider>
