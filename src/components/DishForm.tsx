@@ -32,7 +32,7 @@ export default function DishForm({ onSubmit }: DishFormProps) {
             price: dish.price === "" ? 0 : Number(dish.price),
         };
 
-        console.log("📤 Final payload to backend:", payload);
+        console.log(" Final payload to backend:", payload);
         onSubmit(payload);
 
         setDish({

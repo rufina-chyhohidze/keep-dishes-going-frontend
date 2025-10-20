@@ -1,8 +1,7 @@
-import React from "react";
+import React, { useMemo, useState, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useDishesCustomer } from "../hooks/useDishesCustomer";
 import { useBasket } from "../context/BasketContext";
-import type { Dish } from "../model/Dish";
 import {
     Box,
     Card,
@@ -16,16 +15,84 @@ import {
     Divider,
     Badge,
     Fab,
+    FormControl,
+    InputLabel,
+    Select,
+    MenuItem,
     Chip,
+    OutlinedInput,
 } from "@mui/material";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import AddShoppingCartIcon from "@mui/icons-material/AddShoppingCart";
+import type {Dish, DishType, FoodTags} from "../model/Dish";
+
+
+const TAGS: FoodTags[] = ["VEGAN", "VEGETARIAN", "LACTOSE", "GLUTEN_FREE", "NUTS", "SPICY"];
+const TYPES: DishType[] = ["STARTER", "MAIN", "DESSERT"];
 
 const RestaurantDetailsPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const restaurantId = id ?? "";
+
     const { data: dishes, isLoading, isError, error } = useDishesCustomer(restaurantId);
     const { addItem, items } = useBasket();
+
+    const [selectedType, setSelectedType] = useState<DishType | "">("");
+    const [selectedTags, setSelectedTags] = useState<FoodTags[]>([]);
+    const [sortOption, setSortOption] = useState<string>("price-asc");
+
+    const handleTypeChange = useCallback(
+        (e: React.ChangeEvent<{ value: unknown }>) => setSelectedType(e.target.value as DishType | ""),
+        []
+    );
+    const handleTagChange = useCallback(
+        (e: React.ChangeEvent<{ value: unknown }>) => setSelectedTags(e.target.value as FoodTags[]),
+        []
+    );
+    const handleSortChange = useCallback(
+        (e: React.ChangeEvent<{ value: unknown }>) => setSortOption(e.target.value as string),
+        []
+    );
+    const handleClearFilters = useCallback(() => {
+        setSelectedType("");
+        setSelectedTags([]);
+        setSortOption("price-asc");
+    }, []);
+
+    //(memoized)
+    const filteredDishes = useMemo<Dish[]>(() => {
+        if (!dishes) return [];
+
+        let result = [...dishes];
+
+        if (selectedType) {
+            result = result.filter((d) => d.type === selectedType);
+        }
+
+        if (selectedTags.length > 0) {
+            result = result.filter((d) =>
+                selectedTags.every((tag) => d.foodTags.includes(tag))
+            );
+
+        }
+
+        switch (sortOption) {
+            case "price-asc":
+                result.sort((a, b) => a.price - b.price);
+                break;
+            case "price-desc":
+                result.sort((a, b) => b.price - a.price);
+                break;
+            case "name-asc":
+                result.sort((a, b) => a.name.localeCompare(b.name));
+                break;
+            case "name-desc":
+                result.sort((a, b) => b.name.localeCompare(a.name));
+                break;
+        }
+
+        return result;
+    }, [dishes, selectedType, selectedTags, sortOption]);
 
     if (isLoading) {
         return (
@@ -89,117 +156,182 @@ const RestaurantDetailsPage: React.FC = () => {
 
                 <Divider sx={{ mb: 4, bgcolor: "rgba(255,255,255,0.3)" }} />
 
-                <Grid container spacing={3} justifyContent="center">
-                    {dishes?.map((dish: Dish) => {
-                        const isOutOfStock = dish.stockStatus === "OUT_OF_STOCK";
+                <Box
+                    sx={{
+                        display: "flex",
+                        flexWrap: "wrap",
+                        justifyContent: "center",
+                        gap: 2,
+                        mb: 4,
+                        backgroundColor: "rgba(255, 255, 255, 0.9)",
+                        padding: 2,
+                        borderRadius: 2,
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
+                    }}
+                >
+                    <FormControl sx={{ minWidth: 160,
+                        backgroundColor: "aliceblue",
+                        borderRadius: 1 }}>
+                        <InputLabel>Type</InputLabel>
+                        <Select
+                            value={selectedType}
+                            onChange={handleTypeChange}
+                            label="Type"
+                        >
+                            <MenuItem value="">All</MenuItem>
+                            {TYPES.map((t) => (
+                                <MenuItem key={t} value={t}>
+                                    {t}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
 
-                        return (
-                            <Grid
-                                item
-                                xs={12}
-                                sm={6}
-                                md={4}
-                                key={dish.dishId}
-                                sx={{ display: "flex", justifyContent: "center" }}
+                    <FormControl sx={{ minWidth: 100,
+                        backgroundColor: "aliceblue",
+                        borderRadius: 1}}>
+                        <InputLabel>Tags</InputLabel>
+                        <Select
+                            multiple
+                            value={selectedTags}
+                            onChange={handleTagChange}
+                            input={<OutlinedInput label="Tags" />}
+                            renderValue={(selected) => (
+                                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                                    {(selected as string[]).map((value) => (
+                                        <Chip key={value} label={value} />
+                                    ))}
+                                </Box>
+                            )}
+                        >
+                            {TAGS.map((tag) => (
+                                <MenuItem key={tag} value={tag}>
+                                    {tag}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
+
+                    <FormControl sx={{ minWidth: 180,
+                        backgroundColor: "aliceblue",
+                        borderRadius: 1}}>
+                        <InputLabel>Sort by</InputLabel>
+                        <Select
+                            value={sortOption}
+                            onChange={handleSortChange}
+                            label="Sort by"
+                        >
+                            <MenuItem value="price-asc">Price (Low → High)</MenuItem>
+                            <MenuItem value="price-desc">Price (High → Low)</MenuItem>
+                            <MenuItem value="name-asc">Name (A–Z)</MenuItem>
+                            <MenuItem value="name-desc">Name (Z–A)</MenuItem>
+                        </Select>
+                    </FormControl>
+
+                    <Button variant="outlined" color="secondary" onClick={handleClearFilters}>
+                        Clear Filters
+                    </Button>
+                </Box>
+
+                {/* 🍽️ Dish Grid */}
+                <Grid container spacing={3} justifyContent="center">
+                    {filteredDishes.map((dish) => (
+                        <Grid
+                            item
+                            xs={12}
+                            sm={6}
+                            md={4}
+                            key={dish.dishId}
+                            sx={{ display: "flex", justifyContent: "center" }}
+                        >
+                            <Card
+                                sx={{
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    height: "100%",
+                                    width: 300,
+                                    borderRadius: 3,
+                                    backdropFilter: "blur(8px)",
+                                    background: "rgba(255, 255, 255, 0.9)",
+                                    boxShadow: "0 6px 20px rgba(0,0,0,0.12)",
+                                    transition: "transform 0.25s ease, box-shadow 0.25s ease",
+                                    "&:hover": {
+                                        transform: "translateY(-6px)",
+                                        boxShadow: "0 10px 30px rgba(0,0,0,0.2)",
+                                    },
+                                }}
                             >
-                                <Card
+                                <CardMedia
+                                    component="img"
+                                    height="180"
+                                    image={dish.pictureUrl || "/placeholder.jpg"}
+                                    alt={dish.name}
                                     sx={{
-                                        display: "flex",
-                                        flexDirection: "column",
-                                        height: "100%",
-                                        width: 300,
-                                        borderRadius: 3,
-                                        backdropFilter: "blur(8px)",
-                                        background: "rgba(255, 255, 255, 0.9)",
-                                        boxShadow: "0 6px 20px rgba(0,0,0,0.12)",
-                                        transition:
-                                            "transform 0.25s ease, box-shadow 0.25s ease",
-                                        "&:hover": {
-                                            transform: "translateY(-6px)",
-                                            boxShadow: "0 10px 30px rgba(0,0,0,0.2)",
-                                        },
+                                        objectFit: "cover",
+                                        borderTopLeftRadius: "12px",
+                                        borderTopRightRadius: "12px",
                                     }}
-                                >
-                                    <CardMedia
-                                        component="img"
-                                        height="180"
-                                        image={dish.pictureUrl || "/placeholder.jpg"}
-                                        alt={dish.name}
+                                />
+                                <CardContent sx={{ flexGrow: 1 }}>
+                                    <Typography
+                                        variant="h6"
+                                        sx={{ fontWeight: 700, mb: 1, lineHeight: 1.2 }}
+                                    >
+                                        {dish.name}
+                                    </Typography>
+                                    <Typography
+                                        variant="body2"
                                         sx={{
-                                            objectFit: "cover",
-                                            borderTopLeftRadius: "12px",
-                                            borderTopRightRadius: "12px",
+                                            color: "text.secondary",
+                                            mb: 1.5,
+                                            minHeight: 40,
                                         }}
-                                    />
-                                    <CardContent sx={{ flexGrow: 1 }}>
-                                        <Typography
-                                            variant="h6"
-                                            sx={{ fontWeight: 700, mb: 1, lineHeight: 1.2 }}
-                                        >
-                                            {dish.name}
-                                        </Typography>
-                                        <Typography
-                                            variant="body2"
-                                            sx={{
-                                                color: "text.secondary",
-                                                mb: 1.5,
-                                                minHeight: 40,
-                                            }}
-                                        >
-                                            {dish.description || "No description available"}
-                                        </Typography>
-                                        <Typography
-                                            variant="h6"
-                                            sx={{
-                                                fontWeight: 600,
-                                                color: "primary.main",
-                                                mb: 1,
-                                            }}
-                                        >
-                                            € {dish.price.toFixed(2)}
-                                        </Typography>
-                                        <Chip
-                                            label={
-                                                isOutOfStock ? "Out of Stock" : "In Stock"
-                                            }
-                                            color={isOutOfStock ? "error" : "success"}
-                                            size="small"
-                                        />
-                                    </CardContent>
-                                    <Box sx={{ p: 2, pt: 0 }}>
-                                        <Button
-                                            fullWidth
-                                            variant="contained"
-                                            color="primary"
-                                            startIcon={<AddShoppingCartIcon />}
-                                            sx={{
-                                                py: 1,
-                                                textTransform: "none",
-                                                fontWeight: 600,
-                                                borderRadius: 2,
-                                            }}
-                                            disabled={isOutOfStock}
-                                            onClick={() =>
-                                                addItem(
-                                                    {
-                                                        dishId: dish.dishId,
-                                                        name: dish.name,
-                                                        price: dish.price,
-                                                        quantity: 1,
-                                                    },
-                                                    restaurantId
-                                                )
-                                            }
-                                        >
-                                            {isOutOfStock
-                                                ? "Unavailable"
-                                                : "Add to Basket"}
-                                        </Button>
-                                    </Box>
-                                </Card>
-                            </Grid>
-                        );
-                    })}
+                                    >
+                                        {dish.description || "No description available"}
+                                    </Typography>
+                                    <Typography
+                                        variant="h6"
+                                        sx={{
+                                            fontWeight: 600,
+                                            color: "primary.main",
+                                        }}
+                                    >
+                                        € {dish.price.toFixed(2)}
+                                    </Typography>
+                                </CardContent>
+                                <Box sx={{ p: 2, pt: 0 }}>
+                                    <Button
+                                        fullWidth
+                                        variant="contained"
+                                        color="primary"
+                                        startIcon={<AddShoppingCartIcon />}
+                                        sx={{
+                                            py: 1,
+                                            textTransform: "none",
+                                            fontWeight: 600,
+                                            borderRadius: 2,
+                                        }}
+                                        disabled={dish.stockStatus === "OUT_OF_STOCK"}
+                                        onClick={() =>
+                                            addItem(
+                                                {
+                                                    dishId: dish.dishId,
+                                                    name: dish.name,
+                                                    price: dish.price,
+                                                    quantity: 1,
+                                                },
+                                                restaurantId
+                                            )
+                                        }
+                                    >
+                                        {dish.stockStatus === "OUT_OF_STOCK"
+                                            ? "Out of Stock"
+                                            : "Add to Basket"}
+                                    </Button>
+                                </Box>
+                            </Card>
+                        </Grid>
+                    ))}
                 </Grid>
             </Box>
 
