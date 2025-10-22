@@ -202,7 +202,7 @@ export default function OwnerDishesPage() {
                     <Button
                         variant="outlined"
                         color="primary"
-                        onClick={() => navigate("/")}
+                        onClick={() => navigate("/owner")}
                     >
                         ⬅ Back to Dashboard
                     </Button>

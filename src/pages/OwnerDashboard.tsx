@@ -1,64 +1,38 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
+    CircularProgress,
     Container,
     Typography,
-    CircularProgress,
     Box,
     Paper,
+    Button,
+    Collapse,
     Snackbar,
     Alert,
-    Button,
 } from "@mui/material";
-import DishForm from "../components/DishForm";
-import { useSecurityContext } from "../context/SecurityContext";
 import { useNavigate } from "react-router-dom";
-import api from "../api";
+import { useSecurityContext } from "../context/SecurityContext";
+import { useOwnerRestaurant } from "../hooks/useOwnerRestaurant";
+import RestaurantCard from "../components/RestaurantCard";
+import DishForm from "../components/DishForm";
 import { useDishesOwner } from "../hooks/useDishesOwner";
 
 export default function OwnerDashboard() {
     const { isAuthenticated, getToken } = useSecurityContext();
-    const [restaurantId, setRestaurantId] = useState<string | null>(null);
-    const [loading, setLoading] = useState(true);
+    const navigate = useNavigate();
+    const token = getToken();
+    const { restaurant, loading, handleToggleOpen } = useOwnerRestaurant(token);
+    const [showAddForm, setShowAddForm] = useState(false);
+
     const [snackbar, setSnackbar] = useState({
         open: false,
         message: "",
         severity: "success" as "success" | "error",
     });
 
-    const navigate = useNavigate();
-    const token = getToken();
+    const { createDish } = useDishesOwner(restaurant?.restaurantId ?? null, token);
 
-    useEffect(() => {
-        if (!isAuthenticated()) {
-            window.location.href = "/";
-            return;
-        }
-
-        const fetchRestaurant = async () => {
-            try {
-                const res = await api.get("/owner/me/restaurant", {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
-                setRestaurantId(res.data.restaurantId);
-            } catch (err: any) {
-                if (err.response?.status === 404) {
-                    window.location.href = "/owner/create-restaurant";
-                } else if (err.response?.status === 401) {
-                    window.location.href = "/";
-                } else {
-                    console.error("Failed to fetch restaurant", err);
-                }
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchRestaurant();
-    }, [isAuthenticated, token]);
-
-    const { createDish } = useDishesOwner(restaurantId, token);
-
-    const handleCreate = async (newDish: any) => {
+    const handleCreateDish = async (newDish: any) => {
         try {
             await createDish(newDish);
             setSnackbar({
@@ -66,6 +40,7 @@ export default function OwnerDashboard() {
                 message: "Dish created successfully!",
                 severity: "success",
             });
+            setShowAddForm(false);
         } catch (err) {
             console.error("Failed to create dish", err);
             setSnackbar({
@@ -79,15 +54,25 @@ export default function OwnerDashboard() {
     const handleCloseSnackbar = () =>
         setSnackbar((prev) => ({ ...prev, open: false }));
 
+    if (!isAuthenticated()) {
+        window.location.href = "/";
+        return null;
+    }
+
     if (loading) {
         return (
             <Container sx={{ mt: 10, textAlign: "center" }}>
                 <CircularProgress />
                 <Typography variant="h6" sx={{ mt: 2 }}>
-                    Loading your dashboard...
+                    Loading your restaurant...
                 </Typography>
             </Container>
         );
+    }
+
+    if (!restaurant) {
+        window.location.href = "/owner/create-restaurant";
+        return null;
     }
 
     return (
@@ -101,7 +86,7 @@ export default function OwnerDashboard() {
                 backgroundRepeat: "no-repeat",
                 display: "flex",
                 justifyContent: "center",
-                alignItems: "center",
+                alignItems: "flex-start",
                 p: 4,
                 "&::before": {
                     content: '""',
@@ -116,56 +101,52 @@ export default function OwnerDashboard() {
             }}
         >
             <Container
-                maxWidth="md"
+                maxWidth="sm"
                 sx={{
                     position: "relative",
                     zIndex: 2,
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 4,
                     backdropFilter: "blur(10px)",
-                    backgroundColor: "rgba(255, 255, 255, 0.8)",
+                    backgroundColor: "rgba(255, 255, 255, 0.9)",
                     p: 4,
                     borderRadius: 3,
                     boxShadow: 4,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 3,
                 }}
             >
-                <Box textAlign="center">
-                    <Typography
-                        variant="h3"
-                        component="h1"
-                        fontWeight="bold"
-                        gutterBottom
-                        sx={{ color: "#333" }}
-                    >
-                        🍽 Owner Dashboard
-                    </Typography>
-                    <Typography variant="subtitle1" color="text.secondary">
-                        Add new dishes to your restaurant menu below
-                    </Typography>
-                </Box>
+                <RestaurantCard
+                    restaurant={restaurant}
+                    onAddDish={() => setShowAddForm(true)}
+                    onViewDishes={() => navigate("/owner/dishes")}
+                    onToggleOpen={handleToggleOpen}
+                />
 
-                <Paper
-                    elevation={4}
-                    sx={{
-                        p: 4,
-                        borderRadius: 3,
-                        backgroundColor: "background.paper",
-                    }}
-                >
-                    <DishForm onSubmit={handleCreate} />
-                </Paper>
-
-                <Box textAlign="center">
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        size="large"
-                        onClick={() => navigate("/owner/dishes")}
+                <Collapse in={showAddForm}>
+                    <Paper
+                        elevation={4}
+                        sx={{
+                            mt: 2,
+                            p: 3,
+                            borderRadius: 3,
+                            backgroundColor: "background.paper",
+                        }}
                     >
-                        🍴 View All Dishes
-                    </Button>
-                </Box>
+                        <Typography variant="h6" gutterBottom>
+                            ➕ Add New Dish
+                        </Typography>
+                        <DishForm onSubmit={handleCreateDish} />
+                        <Box display="flex" justifyContent="flex-end" mt={2}>
+                            <Button
+                                variant="outlined"
+                                color="secondary"
+                                onClick={() => setShowAddForm(false)}
+                            >
+                                Cancel
+                            </Button>
+                        </Box>
+                    </Paper>
+                </Collapse>
 
                 <Snackbar
                     open={snackbar.open}

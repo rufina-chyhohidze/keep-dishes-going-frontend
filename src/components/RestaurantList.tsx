@@ -110,7 +110,7 @@ export const RestaurantList: React.FC = () => {
                                         mb: 1,
                                     }}
                                 >
-                                    📧 {r.contactEmail}
+                                    {r.contactEmail}
                                 </Typography>
                                 <Typography
                                     variant="caption"
