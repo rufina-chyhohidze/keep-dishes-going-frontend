@@ -21,7 +21,7 @@ import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
 import DeleteIcon from "@mui/icons-material/Delete";
 
-// 🧾 Zod schema for validation
+// Zod schema for validation
 const customerSchema = z.object({
     name: z.string().min(1, "Name is required"),
     email: z.string().email("Invalid email address"),
@@ -46,7 +46,6 @@ const BasketPage: React.FC = () => {
 
     const navigate = useNavigate();
 
-    // 🧭 Persist restaurantId from context
     const storedRestaurantId = restaurantId;
 
     useEffect(() => {
@@ -66,7 +65,6 @@ const BasketPage: React.FC = () => {
         0
     );
 
-    // 🧾 Submit handler
     const placeOrder = async (data: CustomerFormData) => {
         if (!items || items.length === 0) {
             alert("🛒 Basket is empty");
@@ -87,20 +85,28 @@ const BasketPage: React.FC = () => {
             })),
             payment: {
                 paymentId: crypto.randomUUID(),
-                provider: "PAYPAL",
+                provider: "STRIPE",
                 status: "PENDING",
             },
         };
 
         try {
-            await api.post("/api/orders", payload);
-            alert("Order placed successfully!");
-            clearBasket(); // basket cleared but restaurantId remains persisted
+            // 1️Place order
+            const orderResponse = await api.post("/api/orders", payload);
+            const orderId = orderResponse.data;
+
+            // 2️Create Stripe payment session
+            const paymentResponse = await api.post(`/api/orders/${orderId}/payment`);
+            const checkoutUrl = paymentResponse.data;
+
+            // 3️Redirect to Stripe Checkout
+            window.location.href = checkoutUrl;
         } catch (err) {
             console.error("Failed to place order", err);
             alert("Failed to place order");
         }
     };
+
 
     return (
         <Box
@@ -349,7 +355,6 @@ const BasketPage: React.FC = () => {
                                 </Grid>
                             </Box>
 
-                            {/* Fixed footer */}
                             <Box
                                 sx={{
                                     position: "fixed",

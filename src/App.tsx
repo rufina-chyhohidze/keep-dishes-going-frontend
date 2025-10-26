@@ -11,6 +11,7 @@ import SecurityContextProvider from "./context/SecurityContextProvider";
 import OwnerDashboard from "./pages/OwnerDashboard.tsx";
 import OwnerDishesPage from "./pages/OwnerDishesPage.tsx";
 import EditDishPage from "./pages/EditDishPage.tsx";
+import PaymentSuccessPage from "./pages/PaymentSuccessPage.tsx";
 
 const App: React.FC = () => {
     return (
@@ -21,8 +22,9 @@ const App: React.FC = () => {
                 <Route path="/restaurants" element={<RestaurantListPage />} />
                 <Route path="/restaurants/:id" element={<RestaurantDetailsPage />} />
                 <Route path="/basket" element={<BasketPage />} />
+                <Route path="/payment/success" element={<PaymentSuccessPage />} />
 
-                {/* Owner routes */}
+
                 <Route
                     path="/owner/create-restaurant"
                     element={

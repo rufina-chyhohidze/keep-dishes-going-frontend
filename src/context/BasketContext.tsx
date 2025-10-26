@@ -15,7 +15,7 @@ interface BasketContextType {
     decreaseQuantity: (dishId: string) => void;
     removeItem: (dishId: string) => void;
     clearBasket: () => void;
-    resetRestaurant: () => void; // optional helper
+    resetRestaurant: () => void;
 }
 
 const BasketContext = createContext<BasketContextType | undefined>(undefined);
@@ -23,7 +23,6 @@ const BasketContext = createContext<BasketContextType | undefined>(undefined);
 export const BasketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [items, setItems] = useState<BasketItem[]>([]);
     const [restaurantId, setRestaurantId] = useState<string | null>(() => {
-        //  loading from localStorage on mount
         return localStorage.getItem("lastRestaurantId");
     });
 
