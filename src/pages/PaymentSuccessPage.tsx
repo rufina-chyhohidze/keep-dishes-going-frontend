@@ -1,55 +1,62 @@
-import React, { useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { useBasket } from "../context/BasketContext";
-import { Box, Typography, CircularProgress } from "@mui/material";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Box, Container, Typography } from "@mui/material";
 
-const PaymentSuccessPage: React.FC = () => {
-    const [searchParams] = useSearchParams();
-    const orderId = searchParams.get("orderId");
+export default function PaymentSuccessPage() {
     const navigate = useNavigate();
-    const { clearBasket } = useBasket();
 
     useEffect(() => {
-        clearBasket();
-
         const timer = setTimeout(() => {
             navigate("/customer");
         }, 2000);
 
         return () => clearTimeout(timer);
-    }, [clearBasket, navigate]);
+    }, [navigate]);
 
     return (
         <Box
             sx={{
+                position: "relative",
                 minHeight: "100vh",
+                backgroundImage: 'url("../images/background.png")',
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                backgroundRepeat: "no-repeat",
                 display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
                 justifyContent: "center",
-                background: "linear-gradient(to bottom right, #00c6ff, #0072ff)",
-                color: "#fff",
-                textAlign: "center",
-                p: 3,
+                alignItems: "center",
+                "&::before": {
+                    content: '""',
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    height: "100%",
+                    backgroundColor: "rgba(0,0,0,0.55)",
+                    zIndex: 1,
+                },
             }}
         >
-            <Typography variant="h3" sx={{ fontWeight: 700, mb: 2 }}>
-                Payment Successful!
-            </Typography>
-            <Typography variant="h6" sx={{ mb: 3 }}>
-                Thank you for your order!
-            </Typography>
-            {orderId && (
-                <Typography variant="body2" sx={{ opacity: 0.8, mb: 2 }}>
-                    Order ID: {orderId}
+            <Container
+                maxWidth="sm"
+                sx={{
+                    position: "relative",
+                    zIndex: 2,
+                    textAlign: "center",
+                    backdropFilter: "blur(10px)",
+                    backgroundColor: "rgba(255, 255, 255, 0.9)",
+                    p: 4,
+                    borderRadius: 3,
+                    boxShadow: 4,
+                }}
+            >
+                <Typography variant="h4" gutterBottom>
+                    Payment Successful!
                 </Typography>
-            )}
-            <Typography variant="body1" sx={{ mt: 2 }}>
-                Redirecting you to your dashboard...
-            </Typography>
-            <CircularProgress sx={{ mt: 3, color: "#fff" }} />
+                <Typography variant="body1">
+                    Redirecting you back to the customer page...
+                </Typography>
+            </Container>
         </Box>
     );
-};
-
-export default PaymentSuccessPage;
+}

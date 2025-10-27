@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
     CircularProgress,
     Container,
@@ -9,6 +9,9 @@ import {
     Collapse,
     Snackbar,
     Alert,
+    Card,
+    CardContent,
+    Stack,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useSecurityContext } from "../context/SecurityContext";
@@ -16,6 +19,9 @@ import { useOwnerRestaurant } from "../hooks/useOwnerRestaurant";
 import RestaurantCard from "../components/RestaurantCard";
 import DishForm from "../components/DishForm";
 import { useDishesOwner } from "../hooks/useDishesOwner";
+import { usePendingOrders } from "../hooks/usePendingOrders";
+import api from "../api";
+import { getTimeRemaining, formatTime } from "../utils/time";
 
 export default function OwnerDashboard() {
     const { isAuthenticated, getToken } = useSecurityContext();
@@ -23,6 +29,7 @@ export default function OwnerDashboard() {
     const token = getToken();
     const { restaurant, loading, handleToggleOpen } = useOwnerRestaurant(token);
     const [showAddForm, setShowAddForm] = useState(false);
+    const [timeLeft, setTimeLeft] = useState<Record<string, number>>({});
 
     const [snackbar, setSnackbar] = useState({
         open: false,
@@ -31,6 +38,10 @@ export default function OwnerDashboard() {
     });
 
     const { createDish } = useDishesOwner(restaurant?.restaurantId ?? null, token);
+    const { orders, loading: loadingOrders, error, setOrders } = usePendingOrders(
+        restaurant?.restaurantId ?? null,
+        token
+    );
 
     const handleCreateDish = async (newDish: any) => {
         try {
@@ -51,20 +62,90 @@ export default function OwnerDashboard() {
         }
     };
 
+    const handleAcceptOrder = async (orderId: string) => {
+        try {
+            await api.post(`/api/orders/${orderId}/accept`, {}, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            setOrders((prev) => prev.filter((o) => o.orderId !== orderId));
+            setSnackbar({
+                open: true,
+                message: "Order accepted",
+                severity: "success",
+            });
+        } catch (err) {
+            console.error("Failed to accept order", err);
+            setSnackbar({
+                open: true,
+                message: "Failed to accept order",
+                severity: "error",
+            });
+        }
+    };
+
+    const handleRejectOrder = async (orderId: string) => {
+        try {
+            await api.post(
+                `/api/orders/${orderId}/reject`,
+                { reason: "Restaurant unavailable" },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            setOrders((prev) => prev.filter((o) => o.orderId !== orderId));
+            setSnackbar({
+                open: true,
+                message: "Order rejected",
+                severity: "success",
+            });
+        } catch (err) {
+            console.error("Failed to reject order", err);
+            setSnackbar({
+                open: true,
+                message: "Failed to reject order",
+                severity: "error",
+            });
+        }
+    };
+
     const handleCloseSnackbar = () =>
         setSnackbar((prev) => ({ ...prev, open: false }));
+
+    // Countdown timer effect
+    useEffect(() => {
+        if (!orders || orders.length === 0) return;
+
+        const interval = setInterval(() => {
+            setTimeLeft(() => {
+                const updated: Record<string, number> = {};
+                orders.forEach((order) => {
+                    updated[order.orderId] = getTimeRemaining(order.createdAt);
+                });
+                return updated;
+            });
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [orders]);
+
+    // Auto remove expired orders
+    useEffect(() => {
+        orders.forEach((order) => {
+            if (timeLeft[order.orderId] === 0) {
+                setOrders((prev) => prev.filter((o) => o.orderId !== order.orderId));
+            }
+        });
+    }, [timeLeft]);
 
     if (!isAuthenticated()) {
         window.location.href = "/";
         return null;
     }
 
-    if (loading) {
+    if (loading || loadingOrders) {
         return (
             <Container sx={{ mt: 10, textAlign: "center" }}>
                 <CircularProgress />
                 <Typography variant="h6" sx={{ mt: 2 }}>
-                    Loading your restaurant...
+                    Loading your restaurant and orders...
                 </Typography>
             </Container>
         );
@@ -115,6 +196,7 @@ export default function OwnerDashboard() {
                     gap: 3,
                 }}
             >
+                {/* Restaurant Card */}
                 <RestaurantCard
                     restaurant={restaurant}
                     onAddDish={() => setShowAddForm(true)}
@@ -122,6 +204,7 @@ export default function OwnerDashboard() {
                     onToggleOpen={handleToggleOpen}
                 />
 
+                {/* Add Dish Form */}
                 <Collapse in={showAddForm}>
                     <Paper
                         elevation={4}
@@ -147,6 +230,70 @@ export default function OwnerDashboard() {
                         </Box>
                     </Paper>
                 </Collapse>
+
+                {/* Pending Orders */}
+                <Box mt={3}>
+                    <Typography variant="h6" gutterBottom>
+                        Pending Orders ({orders.length})
+                    </Typography>
+
+                    {orders.length === 0 ? (
+                        <Typography>No pending orders right now.</Typography>
+                    ) : (
+                        orders.map((order) => {
+                            const remaining = timeLeft[order.orderId] ?? getTimeRemaining(order.createdAt);
+                            const isExpiring = remaining < 60000;
+
+                            return (
+                                <Card key={order.orderId} sx={{ mb: 2 }}>
+                                    <CardContent>
+                                        <Typography variant="subtitle1" fontWeight="bold">
+                                            Order #{order.orderId}
+                                        </Typography>
+                                        <Typography>
+                                            Customer: {order.customerInfo.name}
+                                        </Typography>
+                                        <Typography>
+                                            Email: {order.customerInfo.email}
+                                        </Typography>
+                                        <Typography>
+                                            Items: {order.orderLines?.length ?? 0} | Total: €
+                                            {(order.totalPrice ?? 0).toFixed(2)}
+                                        </Typography>
+
+                                        <Typography
+                                            sx={{
+                                                mt: 1,
+                                                fontWeight: isExpiring ? "bold" : "normal",
+                                                color: isExpiring ? "error.main" : "text.primary",
+                                                animation: isExpiring ? "pulse 1s infinite" : "none",
+                                            }}
+                                        >
+                                            ⏳ Time left: {formatTime(remaining)}
+                                        </Typography>
+
+                                        <Stack direction="row" spacing={2} mt={2}>
+                                            <Button
+                                                variant="contained"
+                                                color="success"
+                                                onClick={() => handleAcceptOrder(order.orderId)}
+                                            >
+                                                Accept
+                                            </Button>
+                                            <Button
+                                                variant="contained"
+                                                color="error"
+                                                onClick={() => handleRejectOrder(order.orderId)}
+                                            >
+                                                Reject
+                                            </Button>
+                                        </Stack>
+                                    </CardContent>
+                                </Card>
+                            );
+                        })
+                    )}
+                </Box>
 
                 <Snackbar
                     open={snackbar.open}
