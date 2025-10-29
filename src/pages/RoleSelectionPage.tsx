@@ -130,7 +130,8 @@ const RoleSelectionPage: React.FC = () => {
                             }}
                         >
                             <CardActionArea
-                                onClick={() => navigate("/owner")}
+                                onClick={() => window.location.href = "http://localhost:5173/owner/redirect"}
+
                                 sx={{
                                     borderRadius: "inherit",
                                     backgroundColor: "transparent",

@@ -4,13 +4,23 @@ import { getOwnerRestaurant, toggleRestaurantOpen } from "../api/restaurantApi";
 export function useOwnerRestaurant(token: string | null) {
     const [restaurant, setRestaurant] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [notFound, setNotFound] = useState(false);
 
     const fetchRestaurant = useCallback(() => {
         if (!token) return;
         setLoading(true);
+        setNotFound(false);
+
         getOwnerRestaurant(token)
             .then(setRestaurant)
-            .catch((err) => console.error("Failed to load restaurant", err))
+            .catch((err) => {
+                if (err.response?.status === 404) {
+                    console.log("Owner has no restaurant yet.");
+                    setNotFound(true);
+                } else {
+                    console.error("Failed to load restaurant", err);
+                }
+            })
             .finally(() => setLoading(false));
     }, [token]);
 
@@ -37,5 +47,5 @@ export function useOwnerRestaurant(token: string | null) {
         }
     }
 
-    return { restaurant, loading, handleToggleOpen, refetch: fetchRestaurant };
+    return { restaurant, loading, notFound, handleToggleOpen, refetch: fetchRestaurant };
 }

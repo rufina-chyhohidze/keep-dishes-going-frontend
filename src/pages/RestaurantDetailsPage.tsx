@@ -1,114 +1,85 @@
-import React, { useMemo, useState, useCallback } from "react";
-import { useParams, Link } from "react-router-dom";
-import { useDishesCustomer } from "../hooks/useDishesCustomer";
-import { useBasket } from "../context/BasketContext";
+import { useState, useMemo, useCallback } from "react";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import {
     Box,
-    Card,
-    CardContent,
-    CardMedia,
+    Grid,
     Typography,
     CircularProgress,
     Alert,
     Button,
-    Grid,
-    Divider,
-    Badge,
-    Fab,
     FormControl,
     InputLabel,
     Select,
     MenuItem,
     Chip,
     OutlinedInput,
+    Divider,
+    Card,
+    CardContent,
+    CardMedia,
+    Fab,
+    Badge,
 } from "@mui/material";
-import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import AddShoppingCartIcon from "@mui/icons-material/AddShoppingCart";
-import type {Dish, DishType, FoodTags} from "../model/Dish";
-
+import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
+import { useDishesCustomer } from "../hooks/useDishesCustomer";
+import { useBasket } from "../context/BasketContext";
+import type { Dish, DishType, FoodTags } from "../model/Dish";
 
 const TAGS: FoodTags[] = ["VEGAN", "VEGETARIAN", "LACTOSE", "GLUTEN_FREE", "NUTS", "SPICY"];
 const TYPES: DishType[] = ["STARTER", "MAIN", "DESSERT"];
 
-const RestaurantDetailsPage: React.FC = () => {
+export default function RestaurantDetailsPage() {
     const { id } = useParams<{ id: string }>();
     const restaurantId = id ?? "";
+    const navigate = useNavigate();
 
     const { data: dishes, isLoading, isError, error } = useDishesCustomer(restaurantId);
     const { addItem, items } = useBasket();
 
-    const [selectedType, setSelectedType] = useState<DishType | "">("");
-    const [selectedTags, setSelectedTags] = useState<FoodTags[]>([]);
-    const [sortOption, setSortOption] = useState<string>("price-asc");
+    const [type, setType] = useState<DishType | "">("");
+    const [tags, setTags] = useState<FoodTags[]>([]);
+    const [sort, setSort] = useState<string>("price-asc");
 
-    const handleTypeChange = useCallback(
-        (e: React.ChangeEvent<{ value: unknown }>) => setSelectedType(e.target.value as DishType | ""),
-        []
-    );
-    const handleTagChange = useCallback(
-        (e: React.ChangeEvent<{ value: unknown }>) => setSelectedTags(e.target.value as FoodTags[]),
-        []
-    );
-    const handleSortChange = useCallback(
-        (e: React.ChangeEvent<{ value: unknown }>) => setSortOption(e.target.value as string),
-        []
-    );
-    const handleClearFilters = useCallback(() => {
-        setSelectedType("");
-        setSelectedTags([]);
-        setSortOption("price-asc");
-    }, []);
+    const handleChange = useCallback((setter: any) => (e: any) => setter(e.target.value), []);
 
-    //(memoized)
-    const filteredDishes = useMemo<Dish[]>(() => {
+    const clearFilters = () => {
+        setType("");
+        setTags([]);
+        setSort("price-asc");
+    };
+
+    const filteredDishes = useMemo(() => {
         if (!dishes) return [];
-
         let result = [...dishes];
 
-        if (selectedType) {
-            result = result.filter((d) => d.type === selectedType);
-        }
+        if (type) result = result.filter((d) => d.type === type);
+        if (tags.length) result = result.filter((d) => tags.every((t) => d.foodTags.includes(t)));
 
-        if (selectedTags.length > 0) {
-            result = result.filter((d) =>
-                selectedTags.every((tag) => d.foodTags.includes(tag))
-            );
+        const sorters: Record<string, (a: Dish, b: Dish) => number> = {
+            "price-asc": (a, b) => a.price - b.price,
+            "price-desc": (a, b) => b.price - a.price,
+            "name-asc": (a, b) => a.name.localeCompare(b.name),
+            "name-desc": (a, b) => b.name.localeCompare(a.name),
+        };
 
-        }
+        return result.sort(sorters[sort]);
+    }, [dishes, type, tags, sort]);
 
-        switch (sortOption) {
-            case "price-asc":
-                result.sort((a, b) => a.price - b.price);
-                break;
-            case "price-desc":
-                result.sort((a, b) => b.price - a.price);
-                break;
-            case "name-asc":
-                result.sort((a, b) => a.name.localeCompare(b.name));
-                break;
-            case "name-desc":
-                result.sort((a, b) => b.name.localeCompare(a.name));
-                break;
-        }
-
-        return result;
-    }, [dishes, selectedType, selectedTags, sortOption]);
-
-    if (isLoading) {
+    if (isLoading)
         return (
             <Box sx={{ display: "flex", justifyContent: "center", mt: 10 }}>
                 <CircularProgress size={60} />
             </Box>
         );
-    }
 
-    if (isError) {
+    if (isError)
         return (
             <Alert severity="error" sx={{ mt: 10 }}>
                 {error?.message || "Failed to load dishes"}
             </Alert>
         );
-    }
 
     return (
         <Box
@@ -120,42 +91,54 @@ const RestaurantDetailsPage: React.FC = () => {
                 backgroundPosition: "center",
                 backgroundRepeat: "no-repeat",
                 backgroundAttachment: "fixed",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                p: 4,
+                py: 6,
                 "&::before": {
                     content: '""',
                     position: "absolute",
-                    top: 0,
-                    left: 0,
-                    width: "100%",
-                    height: "100%",
+                    inset: 0,
                     backgroundColor: "rgba(0,0,0,0.55)",
                     zIndex: 1,
                 },
             }}
         >
-            <Box sx={{ maxWidth: 1100, width: "100%", position: "relative", zIndex: 2 }}>
-                <Typography
-                    variant="h3"
-                    sx={{ mb: 1, fontWeight: 700, textAlign: "center", color: "#fff" }}
-                >
-                    🍽️ Our Menu
+            <Box sx={{ position: "relative", zIndex: 2, maxWidth: 1100, mx: "auto", px: 2 }}>
+                {/* 🔙 Back Button */}
+                <Box sx={{ textAlign: "center", mb: 3 }}>
+                    <Button
+                        variant="outlined"
+                        startIcon={<ArrowBackIcon />}
+                        color="inherit"
+                        onClick={() => navigate("/customer")}
+                        sx={{
+                            color: "white",
+                            borderColor: "white",
+                            textTransform: "none",
+                            fontWeight: 600,
+                            "&:hover": {
+                                backgroundColor: "rgba(255,255,255,0.1)",
+                                borderColor: "white",
+                            },
+                        }}
+                    >
+                        Back to Restaurants
+                    </Button>
+                </Box>
+
+                <Typography variant="h3" fontWeight={700} textAlign="center" color="#fff">
+                    Our Menu
                 </Typography>
                 <Typography
                     variant="subtitle1"
-                    sx={{
-                        mb: 3,
-                        textAlign: "center",
-                        color: "rgba(255,255,255,0.8)",
-                    }}
+                    textAlign="center"
+                    color="rgba(255,255,255,0.8)"
+                    mb={3}
                 >
                     Pick your favorite dishes and add them to your basket.
                 </Typography>
 
                 <Divider sx={{ mb: 4, bgcolor: "rgba(255,255,255,0.3)" }} />
 
+                {/* 🔍 Filters */}
                 <Box
                     sx={{
                         display: "flex",
@@ -163,21 +146,15 @@ const RestaurantDetailsPage: React.FC = () => {
                         justifyContent: "center",
                         gap: 2,
                         mb: 4,
-                        backgroundColor: "rgba(255, 255, 255, 0.9)",
-                        padding: 2,
+                        bgcolor: "rgba(255,255,255,0.9)",
+                        p: 2,
                         borderRadius: 2,
                         boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
                     }}
                 >
-                    <FormControl sx={{ minWidth: 160,
-                        backgroundColor: "aliceblue",
-                        borderRadius: 1 }}>
+                    <FormControl sx={{ minWidth: 160, bgcolor: "aliceblue", borderRadius: 1 }}>
                         <InputLabel>Type</InputLabel>
-                        <Select
-                            value={selectedType}
-                            onChange={handleTypeChange}
-                            label="Type"
-                        >
+                        <Select value={type} onChange={handleChange(setType)} label="Type">
                             <MenuItem value="">All</MenuItem>
                             {TYPES.map((t) => (
                                 <MenuItem key={t} value={t}>
@@ -187,14 +164,12 @@ const RestaurantDetailsPage: React.FC = () => {
                         </Select>
                     </FormControl>
 
-                    <FormControl sx={{ minWidth: 100,
-                        backgroundColor: "aliceblue",
-                        borderRadius: 1}}>
+                    <FormControl sx={{ minWidth: 160, bgcolor: "aliceblue", borderRadius: 1 }}>
                         <InputLabel>Tags</InputLabel>
                         <Select
                             multiple
-                            value={selectedTags}
-                            onChange={handleTagChange}
+                            value={tags}
+                            onChange={handleChange(setTags)}
                             input={<OutlinedInput label="Tags" />}
                             renderValue={(selected) => (
                                 <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
@@ -212,15 +187,9 @@ const RestaurantDetailsPage: React.FC = () => {
                         </Select>
                     </FormControl>
 
-                    <FormControl sx={{ minWidth: 180,
-                        backgroundColor: "aliceblue",
-                        borderRadius: 1}}>
+                    <FormControl sx={{ minWidth: 160, bgcolor: "aliceblue", borderRadius: 1 }}>
                         <InputLabel>Sort by</InputLabel>
-                        <Select
-                            value={sortOption}
-                            onChange={handleSortChange}
-                            label="Sort by"
-                        >
+                        <Select value={sort} onChange={handleChange(setSort)} label="Sort by">
                             <MenuItem value="price-asc">Price (Low → High)</MenuItem>
                             <MenuItem value="price-desc">Price (High → Low)</MenuItem>
                             <MenuItem value="name-asc">Name (A–Z)</MenuItem>
@@ -228,89 +197,56 @@ const RestaurantDetailsPage: React.FC = () => {
                         </Select>
                     </FormControl>
 
-                    <Button variant="outlined" color="secondary" onClick={handleClearFilters}>
+                    <Button variant="outlined" color="secondary" onClick={clearFilters}>
                         Clear Filters
                     </Button>
                 </Box>
 
-                {/* 🍽️ Dish Grid */}
+                {/* 🍲 Dishes Grid */}
                 <Grid container spacing={3} justifyContent="center">
                     {filteredDishes.map((dish) => (
-                        <Grid
-                            item
-                            xs={12}
-                            sm={6}
-                            md={4}
-                            key={dish.dishId}
-                            sx={{ display: "flex", justifyContent: "center" }}
-                        >
+                        <Grid item key={dish.dishId}>
                             <Card
                                 sx={{
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    height: "100%",
-                                    width: 300,
+                                    width: 280,
                                     borderRadius: 3,
-                                    backdropFilter: "blur(8px)",
-                                    background: "rgba(255, 255, 255, 0.9)",
-                                    boxShadow: "0 6px 20px rgba(0,0,0,0.12)",
-                                    transition: "transform 0.25s ease, box-shadow 0.25s ease",
-                                    "&:hover": {
-                                        transform: "translateY(-6px)",
-                                        boxShadow: "0 10px 30px rgba(0,0,0,0.2)",
-                                    },
+                                    boxShadow: "0 6px 18px rgba(0,0,0,0.15)",
+                                    transition: "all 0.25s ease",
+                                    "&:hover": { transform: "translateY(-6px)" },
                                 }}
                             >
                                 <CardMedia
                                     component="img"
-                                    height="180"
+                                    height="160"
                                     image={dish.pictureUrl || "/placeholder.jpg"}
                                     alt={dish.name}
                                     sx={{
+                                        borderTopLeftRadius: 12,
+                                        borderTopRightRadius: 12,
                                         objectFit: "cover",
-                                        borderTopLeftRadius: "12px",
-                                        borderTopRightRadius: "12px",
                                     }}
                                 />
-                                <CardContent sx={{ flexGrow: 1 }}>
-                                    <Typography
-                                        variant="h6"
-                                        sx={{ fontWeight: 700, mb: 1, lineHeight: 1.2 }}
-                                    >
+                                <CardContent>
+                                    <Typography variant="h6" fontWeight={700}>
                                         {dish.name}
                                     </Typography>
                                     <Typography
                                         variant="body2"
-                                        sx={{
-                                            color: "text.secondary",
-                                            mb: 1.5,
-                                            minHeight: 40,
-                                        }}
+                                        color="text.secondary"
+                                        sx={{ minHeight: 40, mb: 1 }}
                                     >
-                                        {dish.description || "No description available"}
+                                        {dish.description || "No description"}
                                     </Typography>
-                                    <Typography
-                                        variant="h6"
-                                        sx={{
-                                            fontWeight: 600,
-                                            color: "primary.main",
-                                        }}
-                                    >
+                                    <Typography variant="h6" color="primary" fontWeight={600}>
                                         € {dish.price.toFixed(2)}
                                     </Typography>
                                 </CardContent>
+
                                 <Box sx={{ p: 2, pt: 0 }}>
                                     <Button
                                         fullWidth
                                         variant="contained"
-                                        color="primary"
                                         startIcon={<AddShoppingCartIcon />}
-                                        sx={{
-                                            py: 1,
-                                            textTransform: "none",
-                                            fontWeight: 600,
-                                            borderRadius: 2,
-                                        }}
                                         disabled={dish.stockStatus === "OUT_OF_STOCK"}
                                         onClick={() =>
                                             addItem(
@@ -335,40 +271,11 @@ const RestaurantDetailsPage: React.FC = () => {
                 </Grid>
             </Box>
 
-            <Box
-                sx={{
-                    position: "fixed",
-                    bottom: 30,
-                    right: 30,
-                    zIndex: 2000,
-                }}
-            >
+            {/* 🛒 Basket Floating Button */}
+            <Box sx={{ position: "fixed", bottom: 30, right: 30, zIndex: 2000 }}>
                 <Link to="/basket" style={{ textDecoration: "none" }}>
-                    <Badge
-                        badgeContent={items.length}
-                        color="error"
-                        overlap="rectangular"
-                        anchorOrigin={{
-                            vertical: "top",
-                            horizontal: "right",
-                        }}
-                        sx={{
-                            "& .MuiBadge-badge": {
-                                fontSize: "0.8rem",
-                                fontWeight: 600,
-                                transform: "translate(25%, -25%)",
-                            },
-                        }}
-                    >
-                        <Fab
-                            color="secondary"
-                            sx={{
-                                boxShadow: "0 4px 12px rgba(0,0,0,0.25)",
-                                "&:hover": {
-                                    boxShadow: "0 6px 20px rgba(0,0,0,0.35)",
-                                },
-                            }}
-                        >
+                    <Badge badgeContent={items.length} color="error">
+                        <Fab color="secondary" sx={{ boxShadow: 4 }}>
                             <ShoppingCartIcon sx={{ fontSize: 28 }} />
                         </Fab>
                     </Badge>
@@ -376,6 +283,4 @@ const RestaurantDetailsPage: React.FC = () => {
             </Box>
         </Box>
     );
-};
-
-export default RestaurantDetailsPage;
+}

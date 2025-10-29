@@ -8,7 +8,7 @@ import {
     Box,
     Chip,
 } from "@mui/material";
-import type {Dish} from "../model/Dish.ts";
+import type {Dish} from "../../model/Dish.ts";
 
 interface DishCardProps {
     dish: Dish

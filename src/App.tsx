@@ -12,6 +12,7 @@ import OwnerDashboard from "./pages/OwnerDashboard.tsx";
 import OwnerDishesPage from "./pages/OwnerDishesPage.tsx";
 import EditDishPage from "./pages/EditDishPage.tsx";
 import PaymentSuccessPage from "./pages/PaymentSuccessPage.tsx";
+import OwnerRedirectPage from "./pages/OwnerRedirectPage.tsx";
 
 const App: React.FC = () => {
     return (
@@ -53,6 +54,14 @@ const App: React.FC = () => {
                        element={<RouteGuard>
                            <EditDishPage />
                        </RouteGuard>}
+                />
+                <Route
+                    path="/owner/redirect"
+                    element={
+                        <RouteGuard>
+                            <OwnerRedirectPage />
+                        </RouteGuard>
+                    }
                 />
             </Routes>
         </SecurityContextProvider>

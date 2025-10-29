@@ -1,4 +1,3 @@
-import React from "react";
 import {
     Alert,
     Box,
@@ -10,41 +9,49 @@ import {
     Grid,
     Typography,
 } from "@mui/material";
-import {useNavigate} from "react-router-dom";
-import {useRestaurants} from "../hooks/useRestaurants";
+import { useNavigate } from "react-router-dom";
+import { useRestaurants } from "../../hooks/useRestaurants.ts";
 
-export const RestaurantList: React.FC = () => {
-    const {data: restaurants, isLoading, isError, error} = useRestaurants();
+export function RestaurantList() {
+    const { data: restaurants, isLoading, isError, error } = useRestaurants();
     const navigate = useNavigate();
 
-    if (isLoading)
+    if (isLoading) {
         return (
-            <Box sx={{display: "flex", justifyContent: "center", mt: 10}}>
-                <CircularProgress/>
+            <Box sx={{ display: "flex", justifyContent: "center", mt: 10 }}>
+                <CircularProgress />
             </Box>
         );
+    }
 
-    if (isError)
+    if (isError) {
         return (
-            <Alert severity="error" sx={{mt: 10}}>
+            <Alert severity="error" sx={{ mt: 10 }}>
                 {error.message}
             </Alert>
         );
+    }
 
     return (
-        <Grid container component="div" spacing={4} justifyContent="center">
+        <Grid
+            container
+            spacing={4}
+            justifyContent="center"
+            alignItems="stretch"
+        >
             {restaurants?.map((r) => (
                 <Grid
                     item
-                    component="div"
                     xs={12}
                     sm={6}
                     md={4}
                     lg={3}
                     key={r.restaurantId}
+                    display="flex"
                 >
                     <Card
                         sx={{
+                            width: "100%",
                             borderRadius: 3,
                             boxShadow: "0 6px 20px rgba(0,0,0,0.15)",
                             transition: "transform 0.25s ease, box-shadow 0.25s ease",
@@ -52,6 +59,8 @@ export const RestaurantList: React.FC = () => {
                                 transform: "translateY(-6px)",
                                 boxShadow: "0 10px 30px rgba(0,0,0,0.25)",
                             },
+                            display: "flex",
+                            flexDirection: "column",
                         }}
                     >
                         <CardActionArea
@@ -60,18 +69,22 @@ export const RestaurantList: React.FC = () => {
                             sx={{
                                 borderRadius: "inherit",
                                 backgroundColor: "transparent",
-                                "&:hover": {backgroundColor: "transparent"},
+                                "&:hover": { backgroundColor: "transparent" },
+                                height: "100%",
+                                display: "flex",
+                                flexDirection: "column",
+                                justifyContent: "space-between",
                             }}
                         >
                             <CardMedia
                                 component="img"
-                                height="250" //
+                                height="200"
                                 image={r.pictureUrl || "/placeholder.jpg"}
                                 alt={r.name}
                                 sx={{
                                     objectFit: "cover",
-                                    borderTopLeftRadius: 5,
-                                    borderTopRightRadius: 5,
+                                    borderTopLeftRadius: 12,
+                                    borderTopRightRadius: 12,
                                 }}
                             />
                             <CardContent
@@ -79,6 +92,7 @@ export const RestaurantList: React.FC = () => {
                                     textAlign: "center",
                                     py: 3,
                                     px: 2.5,
+                                    flexGrow: 1,
                                 }}
                             >
                                 <Typography
@@ -130,4 +144,4 @@ export const RestaurantList: React.FC = () => {
             ))}
         </Grid>
     );
-};
+}

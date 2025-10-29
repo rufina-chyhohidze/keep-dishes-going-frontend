@@ -1,82 +1,41 @@
-import React, { useEffect } from "react";
-import { useBasket } from "../context/BasketContext";
-import api from "../api";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useBasket } from "../context/BasketContext";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Box, Typography, Button, Divider } from "@mui/material";
+import api from "../api";
+import BasketItemCard from "../components/basket/BasketItemCard";
+import BasketSummary from "../components/basket/BasketSummary";
+import CustomerInfoForm from "../components/basket/CustomerInfoForm";
+import { customerSchema, type CustomerFormData } from "../types/CustomerForm";
 
-import {
-    Box,
-    Button,
-    Card,
-    CardContent,
-    Grid,
-    TextField,
-    Typography,
-    Divider,
-    IconButton,
-} from "@mui/material";
-import AddIcon from "@mui/icons-material/Add";
-import RemoveIcon from "@mui/icons-material/Remove";
-import DeleteIcon from "@mui/icons-material/Delete";
-
-// Zod schema for validation
-const customerSchema = z.object({
-    name: z.string().min(1, "Name is required"),
-    email: z.string().email("Invalid email address"),
-    street: z.string().min(1, "Street is required"),
-    number: z.string().min(1, "Number is required"),
-    postalCode: z.string().min(1, "Postal code is required"),
-    city: z.string().min(1, "City is required"),
-    country: z.string().min(1, "Country is required"),
-});
-
-type CustomerFormData = z.infer<typeof customerSchema>;
-
-const BasketPage: React.FC = () => {
-    const {
-        items,
-        restaurantId,
-        increaseQuantity,
-        decreaseQuantity,
-        removeItem,
-        clearBasket,
-    } = useBasket();
-
+export default function BasketPage() {
+    const { items, restaurantId, increaseQuantity, decreaseQuantity, removeItem } = useBasket();
     const navigate = useNavigate();
-
-    const storedRestaurantId = restaurantId;
 
     useEffect(() => {
         console.log("🧺 Basket updated:", items);
     }, [items]);
 
-    const {
-        register,
-        handleSubmit,
-        formState: { errors },
-    } = useForm<CustomerFormData>({
+    const { register, handleSubmit, formState: { errors } } = useForm<CustomerFormData>({
         resolver: zodResolver(customerSchema),
     });
 
-    const totalPrice = (items || []).reduce(
-        (sum, i) => sum + i.price * i.quantity,
-        0
-    );
+    const totalPrice = (items || []).reduce((sum, i) => sum + i.price * i.quantity, 0);
 
     const placeOrder = async (data: CustomerFormData) => {
-        if (!items || items.length === 0) {
-            alert("🛒 Basket is empty");
+        if (!items?.length) {
+            alert(" Basket is empty");
             return;
         }
-        if (!storedRestaurantId) {
+        if (!restaurantId) {
             alert("Missing restaurant ID");
             return;
         }
 
         const payload = {
-            restaurantId: storedRestaurantId,
+            restaurantId,
             ...data,
             orderLines: items.map((i) => ({
                 dishId: i.dishId,
@@ -91,22 +50,15 @@ const BasketPage: React.FC = () => {
         };
 
         try {
-            // 1️Place order
             const orderResponse = await api.post("/api/orders", payload);
             const orderId = orderResponse.data;
-
-            // 2️Create Stripe payment session
             const paymentResponse = await api.post(`/api/orders/${orderId}/payment`);
-            const checkoutUrl = paymentResponse.data;
-
-            // 3️Redirect to Stripe Checkout
-            window.location.href = checkoutUrl;
+            window.location.href = paymentResponse.data;
         } catch (err) {
             console.error("Failed to place order", err);
             alert("Failed to place order");
         }
     };
-
 
     return (
         <Box
@@ -146,252 +98,42 @@ const BasketPage: React.FC = () => {
                 >
                     🧺 Your Basket
                 </Typography>
-                <Typography
-                    variant="subtitle1"
-                    sx={{
-                        mb: 4,
-                        textAlign: "center",
-                        color: "rgba(255,255,255,0.8)",
-                    }}
-                >
-                    Review your order and enter your details to complete the purchase.
-                </Typography>
 
-                {!items || items.length === 0 ? (
-                    <Box textAlign="center">
-                        <Typography
-                            variant="body1"
-                            sx={{
-                                color: "#fff",
-                                textAlign: "center",
-                                fontSize: "1.2rem",
-                                mt: 4,
-                            }}
-                        >
+                {!items?.length ? (
+                    <Box textAlign="center" mt={4}>
+                        <Typography sx={{ color: "#fff", fontSize: "1.2rem" }}>
                             Your basket is empty.
                         </Typography>
-                        {storedRestaurantId && (
+                        {restaurantId && (
                             <Button
                                 variant="contained"
                                 color="primary"
-                                sx={{
-                                    mt: 3,
-                                    py: 1,
-                                    px: 4,
-                                    borderRadius: 3,
-                                    textTransform: "none",
-                                    fontWeight: 600,
-                                }}
-                                onClick={() =>
-                                    navigate(`/restaurants/${storedRestaurantId}`)
-                                }
+                                sx={{ mt: 3, py: 1, px: 4, borderRadius: 3 }}
+                                onClick={() => navigate(`/restaurants/${restaurantId}`)}
                             >
                                 ← Back to Restaurant
                             </Button>
                         )}
                     </Box>
                 ) : (
-                    <>
+                    <form onSubmit={handleSubmit(placeOrder)}>
                         {items.map((item) => (
-                            <Card
+                            <BasketItemCard
                                 key={item.dishId}
-                                sx={{
-                                    mb: 2,
-                                    backdropFilter: "blur(8px)",
-                                    background: "rgba(255,255,255,0.9)",
-                                    borderRadius: 3,
-                                    boxShadow: "0 6px 20px rgba(0,0,0,0.15)",
-                                    p: 1,
-                                }}
-                            >
-                                <CardContent
-                                    sx={{
-                                        display: "flex",
-                                        justifyContent: "space-between",
-                                        alignItems: "center",
-                                    }}
-                                >
-                                    <Box sx={{ flex: 1 }}>
-                                        <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                                            {item.name}
-                                        </Typography>
-                                        <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                                            € {item.price.toFixed(2)} each
-                                        </Typography>
-                                    </Box>
-                                    <Box
-                                        sx={{
-                                            display: "flex",
-                                            alignItems: "center",
-                                            gap: 1,
-                                            flexShrink: 0,
-                                        }}
-                                    >
-                                        <IconButton
-                                            color="primary"
-                                            onClick={() => decreaseQuantity(item.dishId)}
-                                            size="small"
-                                        >
-                                            <RemoveIcon />
-                                        </IconButton>
-                                        <Typography
-                                            variant="body1"
-                                            sx={{ mx: 1, minWidth: 20, textAlign: "center" }}
-                                        >
-                                            {item.quantity}
-                                        </Typography>
-                                        <IconButton
-                                            color="primary"
-                                            onClick={() => increaseQuantity(item.dishId)}
-                                            size="small"
-                                        >
-                                            <AddIcon />
-                                        </IconButton>
-                                        <IconButton
-                                            color="error"
-                                            onClick={() => removeItem(item.dishId)}
-                                            size="small"
-                                        >
-                                            <DeleteIcon />
-                                        </IconButton>
-                                    </Box>
-                                </CardContent>
-                            </Card>
+                                item={item}
+                                increaseQuantity={increaseQuantity}
+                                decreaseQuantity={decreaseQuantity}
+                                removeItem={removeItem}
+                            />
                         ))}
 
                         <Divider sx={{ my: 4, bgcolor: "rgba(255,255,255,0.3)" }} />
 
-                        <Typography
-                            variant="h5"
-                            sx={{
-                                fontWeight: 700,
-                                color: "#fff",
-                                textAlign: "center",
-                                mb: 2,
-                            }}
-                        >
-                            💰 Total: € {totalPrice.toFixed(2)}
-                        </Typography>
-
-                        <form onSubmit={handleSubmit(placeOrder)}>
-                            <Box
-                                sx={{
-                                    p: 3,
-                                    borderRadius: 3,
-                                    background: "rgba(255,255,255,0.95)",
-                                    backdropFilter: "blur(8px)",
-                                    boxShadow: "0 6px 20px rgba(0,0,0,0.15)",
-                                    mt: 3,
-                                }}
-                            >
-                                <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-                                    🧍 Customer Info
-                                </Typography>
-
-                                <Grid container spacing={2}>
-                                    <Grid item xs={12} sm={6}>
-                                        <TextField
-                                            label="Name"
-                                            fullWidth
-                                            {...register("name")}
-                                            error={!!errors.name}
-                                            helperText={errors.name?.message}
-                                        />
-                                    </Grid>
-                                    <Grid item xs={12} sm={6}>
-                                        <TextField
-                                            label="Email"
-                                            fullWidth
-                                            {...register("email")}
-                                            error={!!errors.email}
-                                            helperText={errors.email?.message}
-                                        />
-                                    </Grid>
-                                    <Grid item xs={12} sm={6}>
-                                        <TextField
-                                            label="Street"
-                                            fullWidth
-                                            {...register("street")}
-                                            error={!!errors.street}
-                                            helperText={errors.street?.message}
-                                        />
-                                    </Grid>
-                                    <Grid item xs={12} sm={6}>
-                                        <TextField
-                                            label="Number"
-                                            fullWidth
-                                            {...register("number")}
-                                            error={!!errors.number}
-                                            helperText={errors.number?.message}
-                                        />
-                                    </Grid>
-                                    <Grid item xs={12} sm={6}>
-                                        <TextField
-                                            label="Postal Code"
-                                            fullWidth
-                                            {...register("postalCode")}
-                                            error={!!errors.postalCode}
-                                            helperText={errors.postalCode?.message}
-                                        />
-                                    </Grid>
-                                    <Grid item xs={12} sm={6}>
-                                        <TextField
-                                            label="City"
-                                            fullWidth
-                                            {...register("city")}
-                                            error={!!errors.city}
-                                            helperText={errors.city?.message}
-                                        />
-                                    </Grid>
-                                    <Grid item xs={12} sm={6}>
-                                        <TextField
-                                            label="Country"
-                                            fullWidth
-                                            {...register("country")}
-                                            error={!!errors.country}
-                                            helperText={errors.country?.message}
-                                        />
-                                    </Grid>
-                                </Grid>
-                            </Box>
-
-                            <Box
-                                sx={{
-                                    position: "fixed",
-                                    bottom: 0,
-                                    left: 0,
-                                    right: 0,
-                                    p: 2,
-                                    background: "rgba(0,0,0,0.6)",
-                                    backdropFilter: "blur(10px)",
-                                    boxShadow: "0 -4px 20px rgba(0,0,0,0.3)",
-                                    display: "flex",
-                                    justifyContent: "center",
-                                    zIndex: 3,
-                                }}
-                            >
-                                <Button
-                                    type="submit"
-                                    variant="contained"
-                                    color="primary"
-                                    sx={{
-                                        fontSize: "1.2rem",
-                                        fontWeight: 600,
-                                        py: 1.5,
-                                        px: 5,
-                                        borderRadius: 3,
-                                        textTransform: "none",
-                                    }}
-                                >
-                                    Place Order
-                                </Button>
-                            </Box>
-                        </form>
-                    </>
+                        <BasketSummary totalPrice={totalPrice} />
+                        <CustomerInfoForm register={register} errors={errors} />
+                    </form>
                 )}
             </Box>
         </Box>
     );
-};
-
-export default BasketPage;
+}

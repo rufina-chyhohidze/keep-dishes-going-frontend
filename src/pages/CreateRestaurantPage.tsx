@@ -1,29 +1,37 @@
-import React, { useContext } from "react";
+import { useContext } from "react";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+    Box,
+    Button,
+    Container,
+    TextField,
+    Typography,
+    Stack,
+} from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import SecurityContext from "../context/SecurityContext";
 import { API_URL } from "../config";
+import { restaurantFormSchema, type RestaurantFormData } from "../types/RestaurantForm";
 
-type FormValues = {
-    restaurantName: string;
-    streetName: string;
-    streetNumber: string;
-    postalCode: string;
-    city: string;
-    country: string;
-    contactEmail: string;
-    pictureUrl: string;
-    typeOfCuisine: string;
-    defaultPreparationTime: number;
-    openingHours: string;
-};
-
-const CreateRestaurantPage: React.FC = () => {
-    const { register, handleSubmit } = useForm<FormValues>();
-    const navigate = useNavigate();
+function CreateRestaurantPage() {
     const { isAuthenticated, getToken } = useContext(SecurityContext);
+    const navigate = useNavigate();
 
-    const onSubmit = async (data: FormValues) => {
+    const {
+        register,
+        handleSubmit,
+        reset,
+        formState: { errors },
+    } = useForm<RestaurantFormData>({
+        resolver: zodResolver(restaurantFormSchema),
+        defaultValues: {
+            defaultPreparationTime: 15,
+            openingHours: '{"monday":"09:00-18:00"}',
+        },
+    });
+
+    const onSubmit = async (data: RestaurantFormData) => {
         if (!isAuthenticated()) {
             alert("You must be logged in to create a restaurant");
             return;
@@ -49,13 +57,11 @@ const CreateRestaurantPage: React.FC = () => {
                 }),
             });
 
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(errorText);
-            }
+            if (!response.ok) throw new Error(await response.text());
 
-            const id = await response.json();
-            alert(`Restaurant created successfully! ID: ${id}`);
+            await response.json();
+            alert("Restaurant created successfully!");
+            reset();
             navigate("/owner");
         } catch (err: any) {
             console.error("Failed to create restaurant", err);
@@ -64,33 +70,166 @@ const CreateRestaurantPage: React.FC = () => {
     };
 
     return (
-        <div className="container" style={{ padding: "2rem" }}>
-            <h1>Create Restaurant</h1>
-            <form
-                onSubmit={handleSubmit(onSubmit)}
-                style={{ display: "flex", flexDirection: "column", gap: "0.5rem", maxWidth: "400px" }}
+        <Box
+            sx={{
+                position: "relative",
+                minHeight: "100vh",
+                backgroundImage: 'url("../images/background.png")',
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                backgroundRepeat: "no-repeat",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                "&::before": {
+                    content: '""',
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    height: "100%",
+                    backgroundColor: "rgba(0,0,0,0.55)",
+                    zIndex: 1,
+                },
+            }}
+        >
+            <Container
+                maxWidth="sm"
+                sx={{
+                    position: "relative",
+                    zIndex: 2,
+                    backdropFilter: "blur(10px)",
+                    backgroundColor: "rgba(255, 255, 255, 0.9)",
+                    p: 4,
+                    borderRadius: 3,
+                    boxShadow: 6,
+                }}
             >
-                <input {...register("restaurantName")} placeholder="Restaurant Name" required />
-                <input {...register("streetName")} placeholder="Street Name" required />
-                <input {...register("streetNumber")} placeholder="Street Number" required />
-                <input {...register("postalCode")} placeholder="Postal Code" required />
-                <input {...register("city")} placeholder="City" required />
-                <input {...register("country")} placeholder="Country" required />
-                <input {...register("contactEmail")} placeholder="Contact Email" type="email" required />
-                <input {...register("pictureUrl")} placeholder="Picture URL" required />
-                <input {...register("typeOfCuisine")} placeholder="Cuisine Type" required />
-                <input {...register("defaultPreparationTime")} placeholder="Default Prep Time (min)" type="number" required />
-                <textarea
-                    {...register("openingHours")}
-                    placeholder='Opening Hours (JSON) e.g. {"monday":"09:00-18:00"}'
-                    rows={4}
-                />
-                <button type="submit" style={{ marginTop: "1rem", padding: "0.5rem 1rem" }}>
-                    Create Restaurant
-                </button>
-            </form>
-        </div>
+                <Typography
+                    variant="h4"
+                    align="center"
+                    sx={{
+                        mb: 3,
+                        fontWeight: 700,
+                        color: "#5D4037",
+                        textShadow: "0 2px 4px rgba(0,0,0,0.2)",
+                    }}
+                >
+                     Register Your Restaurant
+                </Typography>
+
+                <form onSubmit={handleSubmit(onSubmit)}>
+                    <Stack spacing={2}>
+                        <TextField
+                            label="Restaurant Name"
+                            {...register("restaurantName")}
+                            error={!!errors.restaurantName}
+                            helperText={errors.restaurantName?.message}
+                            fullWidth
+                        />
+
+                        <Stack direction="row" spacing={2}>
+                            <TextField
+                                label="Street Name"
+                                {...register("streetName")}
+                                error={!!errors.streetName}
+                                helperText={errors.streetName?.message}
+                                fullWidth
+                            />
+                            <TextField
+                                label="Street Number"
+                                {...register("streetNumber")}
+                                error={!!errors.streetNumber}
+                                helperText={errors.streetNumber?.message}
+                                sx={{ width: "30%" }}
+                            />
+                        </Stack>
+
+                        <Stack direction="row" spacing={2}>
+                            <TextField
+                                label="Postal Code"
+                                {...register("postalCode")}
+                                error={!!errors.postalCode}
+                                helperText={errors.postalCode?.message}
+                            />
+                            <TextField
+                                label="City"
+                                {...register("city")}
+                                error={!!errors.city}
+                                helperText={errors.city?.message}
+                            />
+                        </Stack>
+
+                        <TextField
+                            label="Country"
+                            {...register("country")}
+                            error={!!errors.country}
+                            helperText={errors.country?.message}
+                            fullWidth
+                        />
+
+                        <TextField
+                            label="Contact Email"
+                            {...register("contactEmail")}
+                            type="email"
+                            error={!!errors.contactEmail}
+                            helperText={errors.contactEmail?.message}
+                            fullWidth
+                        />
+
+                        <TextField
+                            label="Picture URL"
+                            {...register("pictureUrl")}
+                            error={!!errors.pictureUrl}
+                            helperText={errors.pictureUrl?.message}
+                            fullWidth
+                        />
+
+                        <TextField
+                            label="Cuisine Type"
+                            {...register("typeOfCuisine")}
+                            error={!!errors.typeOfCuisine}
+                            helperText={errors.typeOfCuisine?.message}
+                            fullWidth
+                        />
+
+                        <TextField
+                            label="Default Preparation Time (minutes)"
+                            {...register("defaultPreparationTime", { valueAsNumber: true })}
+                            type="number"
+                            error={!!errors.defaultPreparationTime}
+                            helperText={errors.defaultPreparationTime?.message}
+                            fullWidth
+                        />
+
+                        <TextField
+                            label='Opening Hours (JSON) e.g. {"monday":"09:00-18:00"}'
+                            {...register("openingHours")}
+                            multiline
+                            rows={3}
+                            error={!!errors.openingHours}
+                            helperText={errors.openingHours?.message}
+                            fullWidth
+                        />
+
+                        <Button
+                            type="submit"
+                            variant="contained"
+                            sx={{
+                                mt: 2,
+                                fontWeight: "bold",
+                                py: 1.2,
+                                backgroundColor: "#FFB300",
+                                "&:hover": { backgroundColor: "#FFA000" },
+                            }}
+                        >
+                            Create Restaurant
+                        </Button>
+                    </Stack>
+                </form>
+            </Container>
+        </Box>
     );
-};
+}
 
 export default CreateRestaurantPage;
