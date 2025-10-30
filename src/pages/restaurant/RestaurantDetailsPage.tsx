@@ -23,9 +23,9 @@ import {
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import AddShoppingCartIcon from "@mui/icons-material/AddShoppingCart";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
-import { useDishesCustomer } from "../hooks/useDishesCustomer";
-import { useBasket } from "../context/BasketContext";
-import type { Dish, DishType, FoodTags } from "../model/Dish";
+import { useDishesCustomer } from "../../hooks/useDishesCustomer.ts";
+import { useBasket } from "../../context/BasketContext.tsx";
+import type { Dish, DishType, FoodTags } from "../../model/Dish.ts";
 
 const TAGS: FoodTags[] = ["VEGAN", "VEGETARIAN", "LACTOSE", "GLUTEN_FREE", "NUTS", "SPICY"];
 const TYPES: DishType[] = ["STARTER", "MAIN", "DESSERT"];
@@ -138,7 +138,6 @@ export default function RestaurantDetailsPage() {
 
                 <Divider sx={{ mb: 4, bgcolor: "rgba(255,255,255,0.3)" }} />
 
-                {/* 🔍 Filters */}
                 <Box
                     sx={{
                         display: "flex",
@@ -202,7 +201,6 @@ export default function RestaurantDetailsPage() {
                     </Button>
                 </Box>
 
-                {/* 🍲 Dishes Grid */}
                 <Grid container spacing={3} justifyContent="center">
                     {filteredDishes.map((dish) => (
                         <Grid item key={dish.dishId}>
@@ -271,7 +269,6 @@ export default function RestaurantDetailsPage() {
                 </Grid>
             </Box>
 
-            {/* 🛒 Basket Floating Button */}
             <Box sx={{ position: "fixed", bottom: 30, right: 30, zIndex: 2000 }}>
                 <Link to="/basket" style={{ textDecoration: "none" }}>
                     <Badge badgeContent={items.length} color="error">

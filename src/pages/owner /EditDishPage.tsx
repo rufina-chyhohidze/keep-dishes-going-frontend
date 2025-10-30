@@ -9,9 +9,9 @@ import {
     Button,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import api from "../api";
-import EditDishForm from "../components/dish/EditDishForm.tsx";
-import { useSecurityContext } from "../context/SecurityContext";
+import api from "../../api.ts";
+import EditDishForm from "../../components/dish/EditDishForm.tsx";
+import { useSecurityContext } from "../../context/SecurityContext.tsx";
 
 export default function EditDishPage() {
     const { dishId } = useParams();

@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useSecurityContext } from "../context/SecurityContext";
-import api from "../api";
+import { useSecurityContext } from "../../context/SecurityContext.tsx";
+import api from "../../api.ts";
 import { CircularProgress, Container, Typography } from "@mui/material";
 
 function OwnerRedirectPage() {

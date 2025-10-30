@@ -1,8 +1,7 @@
-import React from "react";
-import {Box, Card, CardActionArea, CardContent, Container, Stack, Typography,} from "@mui/material";
-import {useNavigate} from "react-router-dom";
+import { Box, Card, CardActionArea, CardContent, Container, Stack, Typography } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 
-const RoleSelectionPage: React.FC = () => {
+export default function RoleSelectionPage() {
     const navigate = useNavigate();
 
     return (
@@ -32,7 +31,7 @@ const RoleSelectionPage: React.FC = () => {
         >
             <Container
                 maxWidth="md"
-                sx={{position: "relative", zIndex: 2, color: "#fff"}}
+                sx={{ position: "relative", zIndex: 2, color: "#fff" }}
             >
                 <Stack spacing={4} alignItems="center">
                     <Typography
@@ -57,11 +56,10 @@ const RoleSelectionPage: React.FC = () => {
                     </Typography>
 
                     <Stack
-                        direction={{xs: "column", sm: "row"}}
+                        direction={{ xs: "column", sm: "row" }}
                         spacing={4}
-                        sx={{mt: 3}}
+                        sx={{ mt: 3 }}
                     >
-                        {/* CUSTOMER CARD */}
                         <Card
                             sx={{
                                 width: 280,
@@ -82,7 +80,7 @@ const RoleSelectionPage: React.FC = () => {
                                 sx={{
                                     borderRadius: "inherit",
                                     backgroundColor: "transparent",
-                                    "&:hover": {backgroundColor: "transparent"},
+                                    "&:hover": { backgroundColor: "transparent" },
                                 }}
                             >
                                 <CardContent>
@@ -102,18 +100,16 @@ const RoleSelectionPage: React.FC = () => {
                                     >
                                         🍴
                                     </Box>
-                                    <Typography variant="h5" sx={{fontWeight: 700, color: "#795548"}}>
+                                    <Typography variant="h5" sx={{ fontWeight: 700, color: "#795548" }}>
                                         I’m a Customer
                                     </Typography>
-                                    <Typography variant="body2" sx={{mt: 1, color: "text.secondary"}}>
+                                    <Typography variant="body2" sx={{ mt: 1, color: "text.secondary" }}>
                                         Explore restaurants, view menus, and order your favorite dishes.
                                     </Typography>
                                 </CardContent>
                             </CardActionArea>
                         </Card>
 
-
-                        {/* OWNER CARD */}
                         <Card
                             sx={{
                                 width: 280,
@@ -130,12 +126,11 @@ const RoleSelectionPage: React.FC = () => {
                             }}
                         >
                             <CardActionArea
-                                onClick={() => window.location.href = "http://localhost:5173/owner/redirect"}
-
+                                onClick={() => (window.location.href = "http://localhost:5173/owner/redirect")}
                                 sx={{
                                     borderRadius: "inherit",
                                     backgroundColor: "transparent",
-                                    "&:hover": {backgroundColor: "transparent"},
+                                    "&:hover": { backgroundColor: "transparent" },
                                 }}
                             >
                                 <CardContent>
@@ -155,10 +150,10 @@ const RoleSelectionPage: React.FC = () => {
                                     >
                                         👩‍🍳
                                     </Box>
-                                    <Typography variant="h5" sx={{fontWeight: 700, color: "#795548"}}>
+                                    <Typography variant="h5" sx={{ fontWeight: 700, color: "#795548" }}>
                                         I’m an Owner
                                     </Typography>
-                                    <Typography variant="body2" sx={{mt: 1, color: "text.secondary"}}>
+                                    <Typography variant="body2" sx={{ mt: 1, color: "text.secondary" }}>
                                         Manage your restaurant, edit your dishes, and track orders.
                                     </Typography>
                                 </CardContent>
@@ -169,6 +164,4 @@ const RoleSelectionPage: React.FC = () => {
             </Container>
         </Box>
     );
-};
-
-export default RoleSelectionPage;
+}

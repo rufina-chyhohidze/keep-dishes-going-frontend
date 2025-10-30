@@ -6,4 +6,5 @@ export interface Restaurant {
     pictureUrl: string;
     cuisineType: string;
     defaultPreparationTime: number;
+    open:boolean;
 }

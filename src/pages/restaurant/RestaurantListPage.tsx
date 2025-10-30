@@ -1,7 +1,7 @@
 import { Box, Button, Container, Typography } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useNavigate } from "react-router-dom";
-import { RestaurantList } from "../components/restaurant/RestaurantList.tsx";
+import { RestaurantList } from "../../components/restaurant/RestaurantList.tsx";
 
 export default function RestaurantListPage() {
     const navigate = useNavigate();

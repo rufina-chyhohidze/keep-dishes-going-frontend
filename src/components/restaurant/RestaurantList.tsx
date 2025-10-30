@@ -8,9 +8,10 @@ import {
     CircularProgress,
     Grid,
     Typography,
+    Chip,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import { useRestaurants } from "../../hooks/useRestaurants.ts";
+import { useRestaurants } from "../../hooks/useRestaurants";
 
 export function RestaurantList() {
     const { data: restaurants, isLoading, isError, error } = useRestaurants();
@@ -33,12 +34,7 @@ export function RestaurantList() {
     }
 
     return (
-        <Grid
-            container
-            spacing={4}
-            justifyContent="center"
-            alignItems="stretch"
-        >
+        <Grid container spacing={4} justifyContent="center" alignItems="stretch">
             {restaurants?.map((r) => (
                 <Grid
                     item
@@ -61,11 +57,42 @@ export function RestaurantList() {
                             },
                             display: "flex",
                             flexDirection: "column",
+                            position: "relative",
                         }}
                     >
+                        <Chip
+                            label={r.open ? "OPEN" : "CLOSED"}
+                            color={r.open ? "success" : "error"}
+                            size="small"
+                            sx={{
+                                position: "absolute",
+                                top: 10,
+                                right: 10,
+                                fontWeight: 700,
+                                letterSpacing: 0.6,
+                                textTransform: "uppercase",
+                                zIndex: 3,
+                                bgcolor: r.open ? "success.main" : "rgba(211,47,47,0.9)", // 🔸 more solid red for CLOSED
+                                color: "white",
+                                boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+                            }}
+                        />
+
+                        {!r.open && (
+                            <Box
+                                sx={{
+                                    position: "absolute",
+                                    inset: 0,
+                                    backgroundColor: "rgba(0,0,0,0.25)",
+                                    zIndex: 2,
+                                }}
+                            />
+                        )}
+
+
                         <CardActionArea
                             onClick={() => navigate(`/restaurants/${r.restaurantId}`)}
-                            disableRipple
+                            disabled={!r.open}
                             sx={{
                                 borderRadius: "inherit",
                                 backgroundColor: "transparent",
@@ -74,6 +101,8 @@ export function RestaurantList() {
                                 display: "flex",
                                 flexDirection: "column",
                                 justifyContent: "space-between",
+                                opacity: r.open ? 1 : 0.65,
+                                pointerEvents: r.open ? "auto" : "none",
                             }}
                         >
                             <CardMedia
@@ -87,6 +116,7 @@ export function RestaurantList() {
                                     borderTopRightRadius: 12,
                                 }}
                             />
+
                             <CardContent
                                 sx={{
                                     textAlign: "center",

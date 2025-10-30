@@ -1,18 +1,18 @@
 import React from "react";
 import { Route, Routes } from "react-router-dom";
-import RestaurantListPage from "./pages/RestaurantListPage";
-import RestaurantDetailsPage from "./pages/RestaurantDetailsPage";
+import RestaurantListPage from "./pages/restaurant/RestaurantListPage.tsx";
+import RestaurantDetailsPage from "./pages/restaurant/RestaurantDetailsPage.tsx";
 import RoleSelectionPage from "./pages/RoleSelectionPage";
 
-import BasketPage from "./pages/BasketPage";
-import CreateRestaurantPage from "./pages/CreateRestaurantPage";
+import BasketPage from "./pages/customer/BasketPage.tsx";
+import CreateRestaurantPage from "./pages/restaurant/CreateRestaurantPage.tsx";
 import { RouteGuard } from "./components/RouteGuard";
 import SecurityContextProvider from "./context/SecurityContextProvider";
-import OwnerDashboard from "./pages/OwnerDashboard.tsx";
-import OwnerDishesPage from "./pages/OwnerDishesPage.tsx";
-import EditDishPage from "./pages/EditDishPage.tsx";
-import PaymentSuccessPage from "./pages/PaymentSuccessPage.tsx";
-import OwnerRedirectPage from "./pages/OwnerRedirectPage.tsx";
+import OwnerDashboard from "./pages/owner /OwnerDashboard.tsx";
+import OwnerDishesPage from "./pages/owner /OwnerDishesPage.tsx";
+import EditDishPage from "./pages/owner /EditDishPage.tsx";
+import PaymentSuccessPage from "./pages/customer/PaymentSuccessPage.tsx";
+import OwnerRedirectPage from "./pages/owner /OwnerRedirectPage.tsx";
 
 const App: React.FC = () => {
     return (

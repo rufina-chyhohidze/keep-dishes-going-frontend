@@ -10,9 +10,9 @@ import {
     Stack,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import SecurityContext from "../context/SecurityContext";
-import { API_URL } from "../config";
-import { restaurantFormSchema, type RestaurantFormData } from "../types/RestaurantForm";
+import SecurityContext from "../../context/SecurityContext.tsx";
+import { API_URL } from "../../config.tsx";
+import { restaurantFormSchema, type RestaurantFormData } from "../../types/RestaurantForm.ts";
 
 function CreateRestaurantPage() {
     const { isAuthenticated, getToken } = useContext(SecurityContext);

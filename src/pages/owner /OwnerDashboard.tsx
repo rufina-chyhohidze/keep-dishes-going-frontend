@@ -8,17 +8,17 @@ import {
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useNavigate } from "react-router-dom";
-import { useSecurityContext } from "../context/SecurityContext";
-import { useOwnerRestaurant } from "../hooks/useOwnerRestaurant";
-import { useDishesOwner } from "../hooks/useDishesOwner";
-import { usePendingOrders } from "../hooks/usePendingOrders";
-import { getTimeRemaining } from "../utils/time";
-import api from "../api";
+import { useSecurityContext } from "../../context/SecurityContext.tsx";
+import { useOwnerRestaurant } from "../../hooks/useOwnerRestaurant.ts";
+import { useDishesOwner } from "../../hooks/useDishesOwner.ts";
+import { usePendingOrders } from "../../hooks/usePendingOrders.ts";
+import { getTimeRemaining } from "../../utils/time.ts";
+import api from "../../api.ts";
 
-import RestaurantSection from "../components/owner/RestaurantSection";
-import PendingOrdersSection from "../components/owner/PendingOrdersSection";
-import DashboardSnackbar from "../components/owner/DashboardSnackbar";
-import LogoutButton from "../components/common/LogoutButton";
+import RestaurantSection from "../../components/owner/RestaurantSection.tsx";
+import PendingOrdersSection from "../../components/owner/PendingOrdersSection.tsx";
+import DashboardSnackbar from "../../components/owner/DashboardSnackbar.tsx";
+import LogoutButton from "../../components/common/LogoutButton.tsx";
 
 export default function OwnerDashboard() {
     const { isAuthenticated, getToken } = useSecurityContext();

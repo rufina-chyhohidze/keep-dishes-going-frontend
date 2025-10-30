@@ -16,10 +16,10 @@ import {
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useNavigate } from "react-router-dom";
-import { useSecurityContext } from "../context/SecurityContext";
-import api from "../api";
-import { useDishesOwner } from "../hooks/useDishesOwner";
-import type { Dish } from "../model/Dish";
+import { useSecurityContext } from "../../context/SecurityContext.tsx";
+import api from "../../api.ts";
+import { useDishesOwner } from "../../hooks/useDishesOwner.ts";
+import type { Dish } from "../../model/Dish.ts";
 
 export default function OwnerDishesPage() {
     const { isAuthenticated, getToken } = useSecurityContext();

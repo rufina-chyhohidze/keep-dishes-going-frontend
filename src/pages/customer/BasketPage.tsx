@@ -1,14 +1,14 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useBasket } from "../context/BasketContext";
+import { useBasket } from "../../context/BasketContext.tsx";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Box, Typography, Button, Divider } from "@mui/material";
-import api from "../api";
-import BasketItemCard from "../components/basket/BasketItemCard";
-import BasketSummary from "../components/basket/BasketSummary";
-import CustomerInfoForm from "../components/basket/CustomerInfoForm";
-import { customerSchema, type CustomerFormData } from "../types/CustomerForm";
+import api from "../../api.ts";
+import BasketItemCard from "../../components/basket/BasketItemCard.tsx";
+import BasketSummary from "../../components/basket/BasketSummary.tsx";
+import CustomerInfoForm from "../../components/basket/CustomerInfoForm.tsx";
+import { customerSchema, type CustomerFormData } from "../../types/CustomerForm.ts";
 
 export default function BasketPage() {
     const { items, restaurantId, increaseQuantity, decreaseQuantity, removeItem } = useBasket();
