@@ -1,5 +1,5 @@
 import api from "../api";
-import type { Dish } from "../model/Dish";
+import type { Dish } from "../model/dish.ts";
 
 /**
  * Fetch all dishes (including unpublished) for a restaurant (OWNER only)

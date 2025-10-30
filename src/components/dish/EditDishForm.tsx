@@ -49,7 +49,7 @@ export default function EditDishForm({ initialValues, onSubmit }: EditDishFormPr
             ...dish,
             price: dish.price === "" ? 0 : Number(dish.price),
         };
-        console.log("💾 Updated dish payload:", payload);
+        console.log(" Updated dish payload:", payload);
         onSubmit(payload);
     };
 

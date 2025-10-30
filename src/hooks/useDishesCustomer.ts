@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
-import type {Dish} from "../model/Dish";
+import type {Dish} from "../model/dish.ts";
 
 /**
  * Fetch only published dishes for customers

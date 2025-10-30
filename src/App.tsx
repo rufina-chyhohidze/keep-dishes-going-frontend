@@ -1,9 +1,7 @@
-import React from "react";
 import { Route, Routes } from "react-router-dom";
 import RestaurantListPage from "./pages/restaurant/RestaurantListPage.tsx";
-import RestaurantDetailsPage from "./pages/restaurant/RestaurantDetailsPage.tsx";
+import RestaurantDishesPage from "./pages/restaurant/RestaurantDishesPage.tsx";
 import RoleSelectionPage from "./pages/RoleSelectionPage";
-
 import BasketPage from "./pages/customer/BasketPage.tsx";
 import CreateRestaurantPage from "./pages/restaurant/CreateRestaurantPage.tsx";
 import { RouteGuard } from "./components/RouteGuard";
@@ -14,17 +12,16 @@ import EditDishPage from "./pages/owner /EditDishPage.tsx";
 import PaymentSuccessPage from "./pages/customer/PaymentSuccessPage.tsx";
 import OwnerRedirectPage from "./pages/owner /OwnerRedirectPage.tsx";
 
-const App: React.FC = () => {
+export default function App() {
     return (
         <SecurityContextProvider>
             <Routes>
                 <Route path="/" element={<RoleSelectionPage />} />
                 <Route path="/customer" element={<RestaurantListPage />} />
                 <Route path="/restaurants" element={<RestaurantListPage />} />
-                <Route path="/restaurants/:id" element={<RestaurantDetailsPage />} />
+                <Route path="/restaurants/:id" element={<RestaurantDishesPage />} />
                 <Route path="/basket" element={<BasketPage />} />
                 <Route path="/payment/success" element={<PaymentSuccessPage />} />
-
 
                 <Route
                     path="/owner/create-restaurant"
@@ -50,10 +47,13 @@ const App: React.FC = () => {
                         </RouteGuard>
                     }
                 />
-                <Route path="/owner/dishes/:dishId/edit"
-                       element={<RouteGuard>
-                           <EditDishPage />
-                       </RouteGuard>}
+                <Route
+                    path="/owner/dishes/:dishId/edit"
+                    element={
+                        <RouteGuard>
+                            <EditDishPage />
+                        </RouteGuard>
+                    }
                 />
                 <Route
                     path="/owner/redirect"
@@ -66,6 +66,4 @@ const App: React.FC = () => {
             </Routes>
         </SecurityContextProvider>
     );
-};
-
-export default App;
+}

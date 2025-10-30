@@ -19,7 +19,7 @@ import { useNavigate } from "react-router-dom";
 import { useSecurityContext } from "../../context/SecurityContext.tsx";
 import api from "../../api.ts";
 import { useDishesOwner } from "../../hooks/useDishesOwner.ts";
-import type { Dish } from "../../model/Dish.ts";
+import type { Dish } from "../../model/dish.ts";
 
 export default function OwnerDishesPage() {
     const { isAuthenticated, getToken } = useSecurityContext();

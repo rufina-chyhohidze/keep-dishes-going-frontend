@@ -9,7 +9,7 @@ import {
     markDishInStock,
     markDishOutOfStock,
 } from "../api/dishesApi";
-import type { Dish } from "../model/Dish";
+import type { Dish } from "../model/dish.ts";
 
 export function useDishesOwner(restaurantId: string | null, token: string | null) {
     const queryClient = useQueryClient();
